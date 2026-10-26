@@ -106,11 +106,35 @@
   .graphwrap { position: relative; background: #0b1018; border: 1px solid var(--line); border-radius: 10px; height: 62vh; }
   svg { width: 100%; height: 100%; display: block; cursor: grab; }
   svg text { font-size: 9.5px; fill: var(--muted); pointer-events: none; }
-  svg line { stroke: #33415c; stroke-width: .8; }
+  svg line { stroke: #33415c; stroke-width: .8; transition: opacity .15s; }
+  svg line.dim { opacity: .05; }
   svg circle { cursor: pointer; stroke: #0b1018; stroke-width: 1.2; }
+  svg g.node { transition: opacity .15s; cursor: grab; }
+  svg g.node.dim { opacity: .1; }
+  svg text { transition: opacity .15s; }
   .graphbar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
-  .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: 11px; color: var(--muted); }
+  .legend { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; font-size: 11px; color: var(--muted); }
   .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; }
+  button.fam {
+    background: transparent; border: 1px solid var(--line); border-radius: 999px;
+    padding: 3px 10px; color: var(--muted); font-size: 11px; cursor: pointer; font-weight: 400;
+  }
+  button.fam:hover { border-color: var(--accent); color: var(--accent); }
+  button.fam.on { border-color: var(--accent); color: var(--accent); background: rgba(90,200,250,.08); }
+  .gbtn { padding: 4px 11px; font-size: 13px; line-height: 1.2; }
+  .graphhint { color: var(--muted); font-size: 11.5px; margin: 0 0 8px; }
+  .gsearch { position: relative; }
+  .gsearch input { width: 200px; }
+  .gsearch-list {
+    position: absolute; top: 36px; left: 0; min-width: 260px; max-height: 280px; overflow: auto;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 8px; z-index: 40; display: none;
+  }
+  .gsearch-list button {
+    display: block; width: 100%; text-align: left; background: none; border: 0;
+    color: var(--text); padding: 6px 10px; font-size: 12px; border-radius: 0; font-weight: 400;
+  }
+  .gsearch-list button:hover { background: var(--panel-2); }
+  .gsearch-list .t { color: var(--muted); font-size: 10px; text-transform: uppercase; margin-right: 6px; }
   .drawer {
     position: fixed; top: 61px; right: 0; width: min(430px, 92vw); height: calc(100vh - 61px);
     background: var(--panel); border-left: 1px solid var(--line); padding: 16px; overflow: auto; z-index: 30;
@@ -186,13 +210,29 @@
     <div class="panel" id="panel-cypher"><pre id="cypherOut">—</pre></div>
     <div class="panel" id="panel-graph">
       <div class="graphbar">
-        <select id="graphFocus" style="max-width:320px"></select>
+        <button class="ghost gbtn" id="gBack" data-i18n="graph.back" hidden>&larr; back</button>
+        <select id="graphFocus" style="max-width:280px"></select>
         <select id="graphDepth">
           <option value="1" data-i18n="depth.1">depth 1</option>
           <option value="2" data-i18n="depth.2">depth 2</option>
+          <option value="3" data-i18n="depth.3">depth 3</option>
+        </select>
+        <div class="gsearch">
+          <input id="graphSearch" type="text" data-i18n-ph="graph.search" placeholder="find a node&hellip;" autocomplete="off" />
+          <div class="gsearch-list" id="graphSearchList"></div>
+        </div>
+        <button class="ghost gbtn" id="gzIn" title="zoom in">+</button>
+        <button class="ghost gbtn" id="gzOut" title="zoom out">&minus;</button>
+        <button class="ghost gbtn" id="gFit" data-i18n="graph.fit">fit</button>
+        <button class="ghost gbtn" id="gReset" data-i18n="graph.reset">reset</button>
+        <select id="graphLabels">
+          <option value="auto" data-i18n="graph.labels.auto">labels: auto</option>
+          <option value="on" data-i18n="graph.labels.on">labels: all</option>
+          <option value="off" data-i18n="graph.labels.off">labels: none</option>
         </select>
         <span id="graphInfo"></span>
       </div>
+      <p class="graphhint" data-i18n="graph.hint"></p>
       <div class="graphwrap"><svg id="svg"></svg></div>
       <div class="legend" id="graphLegend"></div>
     </div>
@@ -249,6 +289,7 @@ const I18N = {
     "answer.empty": "Ask a question, or pick one on the left.",
     "depth.1": "depth 1",
     "depth.2": "depth 2",
+    "depth.3": "depth 3",
     "graph.whole": "— whole graph (top 220) —",
     "scheme.none": "— no scheme —",
     "drawer.close": "close",
@@ -257,7 +298,15 @@ const I18N = {
     "results.open": "open",
     "browse.nothing": "nothing found",
     "meta.confidence": "confidence",
-    "meta.rows": "row(s)"
+    "meta.rows": "row(s)",
+    "graph.search": "find a node in the graph\u2026",
+    "graph.hint": "Drag nodes to rearrange \u00b7 scroll to zoom \u00b7 double-click a node to explore around it \u00b7 click for details",
+    "graph.fit": "fit",
+    "graph.reset": "reset",
+    "graph.back": "\u2190 back",
+    "graph.labels.auto": "labels: auto",
+    "graph.labels.on": "labels: all",
+    "graph.labels.off": "labels: none"
   },
   "fr": {
     "nav.tag": "· explorateur",
@@ -276,6 +325,7 @@ const I18N = {
     "answer.empty": "Posez une question, ou choisissez-en une à gauche.",
     "depth.1": "profondeur 1",
     "depth.2": "profondeur 2",
+    "depth.3": "profondeur 3",
     "graph.whole": "— graphe entier (220 max) —",
     "scheme.none": "— sans scheme —",
     "drawer.close": "fermer",
@@ -284,7 +334,15 @@ const I18N = {
     "results.open": "ouvrir",
     "browse.nothing": "aucun résultat",
     "meta.confidence": "confiance",
-    "meta.rows": "ligne(s)"
+    "meta.rows": "ligne(s)",
+    "graph.search": "trouver un node dans le graphe\u2026",
+    "graph.hint": "Faites glisser les nodes pour les d\u00e9placer \u00b7 molette pour zoomer \u00b7 double-cliquez sur un node pour explorer autour \u00b7 cliquez pour les d\u00e9tails",
+    "graph.fit": "ajuster",
+    "graph.reset": "r\u00e9initialiser",
+    "graph.back": "\u2190 retour",
+    "graph.labels.auto": "\u00e9tiquettes : auto",
+    "graph.labels.on": "\u00e9tiquettes : toutes",
+    "graph.labels.off": "\u00e9tiquettes : aucune"
   },
   "mg": {
     "nav.tag": "· mpitsidika",
@@ -303,6 +361,7 @@ const I18N = {
     "answer.empty": "Manontania fanontaniana, na safidio ny iray eo ankavia.",
     "depth.1": "halalina 1",
     "depth.2": "halalina 2",
+    "depth.3": "halalina 3",
     "graph.whole": "— graph manontolo (220 fara-taminy) —",
     "scheme.none": "— tsy misy scheme —",
     "drawer.close": "akatona",
@@ -311,7 +370,15 @@ const I18N = {
     "results.open": "sokafy",
     "browse.nothing": "tsy nisy hita",
     "meta.confidence": "fahatokisana",
-    "meta.rows": "valiny"
+    "meta.rows": "valiny",
+    "graph.search": "hikaroka node ao amin'ny graph\u2026",
+    "graph.hint": "Sarioso ny nodes hanitsiana \u00b7 kitihina hamitatra \u00b7 tsindrio indroa ny node hijerena ny manodidina azy \u00b7 tsindrio iray hahitana ny antsipiriany",
+    "graph.fit": "hifanaraka",
+    "graph.reset": "averina",
+    "graph.back": "\u2190 miverina",
+    "graph.labels.auto": "anarana: mandeha-ho azy",
+    "graph.labels.on": "anarana: rehetra",
+    "graph.labels.off": "anarana: tsy misy"
   }
 };
 
@@ -389,6 +456,7 @@ function fillSelects() {
       {id:'coverage:drop', label:'Drop coverage'}, {id:'arch:rim-protector', label:'Rim protector'}])
     .map(p => `<option value="${esc(p.id)}">${esc(p.label)}</option>`).join('') +
     `<option value="">${esc(t('graph.whole'))}</option>`;
+  if (state.customFocus) ensureFocusOption(state.customFocus.id, state.customFocus.label);
   $('graphFocus').value = focusVal;
 
   const schemeVal = $('courtScheme').value || state.scheme || '';
@@ -509,116 +577,360 @@ async function loadCourt() {
 $('courtScheme').onchange = e => { state.scheme = e.target.value || null; loadCourt(); };
 
 /* ------------------------------------------------------------------ graph */
+/* Beginner-first graph explorer: animated force layout, draggable nodes,
+   hover = neighbourhood spotlight, double-click = drill-down (with Back),
+   family legend filters, in-graph search, zoom/fit controls, adaptive labels. */
+const FAMILIES = [
+  { id: 'plays',   color: '#ff7a7a', label: 'Plays & actions',     types: ['Play', 'OffensivePlay', 'DefensivePlay', 'Action', 'ActionType', 'Decision', 'Formation'] },
+  { id: 'schemes', color: '#c792ea', label: 'Schemes & coverages', types: ['Scheme', 'OffensiveScheme', 'DefensiveScheme', 'Coverage', 'Assignment', 'Counter', 'Outcome', 'Situation'] },
+  { id: 'zones',   color: '#5ddb92', label: 'Zones & space',       types: ['Zone', 'ZoneType'] },
+  { id: 'people',  color: '#5ac8fa', label: 'Roles & people',      types: ['Position', 'PositionGroup', 'Role', 'Archetype', 'Skill', 'Player', 'Coach', 'Team'] },
+  { id: 'rules',   color: '#ffe066', label: 'Rules',               types: ['Rule', 'RuleType', 'Penalty'] },
+  { id: 'other',   color: '#94a3b8', label: 'Concepts',            types: ['Concept'] }
+];
+const familyOf = ty => (FAMILIES.find(f => f.types.includes(ty)) || FAMILIES[FAMILIES.length - 1]).id;
+
+const NS = 'http://www.w3.org/2000/svg';
+let simNodes = [], simLinks = [], linkEls = [], nodeEls = [];
+let simAlpha = 0, simRaf = null, simTicks = 0, fitted = false;
+let view = { k: 1, x: 0, y: 0 }, hoverId = null, familyFilter = null;
+let dragNode = null, dragMoved = 0, panning = null, suppressClick = null;
+let hubSet = new Set(), labelCut = 4;
+state.adj = new Map(); state.focusStack = []; state.customFocus = null;
+
+const svgEl = () => $('svg');
+const svgW = () => svgEl().clientWidth || 900;
+const svgH = () => svgEl().clientHeight || 520;
+const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+function applyTransform() {
+  const g = svgEl().querySelector('#viewport');
+  if (g) g.setAttribute('transform', `translate(${view.x},${view.y}) scale(${view.k})`);
+  refreshLabels();
+}
+function toSvg(e) {
+  const r = svgEl().getBoundingClientRect();
+  return { x: (e.clientX - r.left - view.x) / view.k, y: (e.clientY - r.top - view.y) / view.k };
+}
+function zoomBy(f, cx, cy) {
+  const w = svgW(), h = svgH();
+  cx = cx == null ? w / 2 : cx; cy = cy == null ? h / 2 : cy;
+  const k2 = clamp(view.k * f, 0.15, 4);
+  view.x = cx - (cx - view.x) * (k2 / view.k);
+  view.y = cy - (cy - view.y) * (k2 / view.k);
+  view.k = k2; applyTransform();
+}
+function fitView() {
+  if (!simNodes.length) return;
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9;
+  simNodes.forEach(n => { x0 = Math.min(x0, n.x); y0 = Math.min(y0, n.y); x1 = Math.max(x1, n.x); y1 = Math.max(y1, n.y); });
+  const w = svgW(), h = svgH(), pad = 40;
+  const k = clamp(Math.min((w - pad * 2) / Math.max(x1 - x0, 1), (h - pad * 2) / Math.max(y1 - y0, 1)), 0.2, 1.5);
+  view.k = k;
+  view.x = w / 2 - k * (x0 + x1) / 2;
+  view.y = h / 2 - k * (y0 + y1) / 2;
+  applyTransform();
+}
+
+/* --- simulation --------------------------------------------------------- */
+function startSim(alpha) {
+  simAlpha = Math.max(simAlpha, alpha);
+  if (!simRaf) simRaf = requestAnimationFrame(tick);
+}
+function tick() {
+  const n = simNodes, cool = clamp(simAlpha, 0.02, 1);
+  for (let i = 0; i < n.length; i++) {
+    const a = n[i];
+    for (let j = i + 1; j < n.length; j++) {
+      const b = n[j];
+      let dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy || 0.01;
+      if (d2 > 62500) continue;
+      const f = 900 / d2, d = Math.sqrt(d2);
+      a.vx -= dx / d * f; a.vy -= dy / d * f;
+      b.vx += dx / d * f; b.vy += dy / d * f;
+    }
+  }
+  for (const l of simLinks) {
+    const a = l._s, b = l._t;
+    const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+    const f = (d - 70) * 0.012 * cool;
+    a.vx += dx / d * f; a.vy += dy / d * f;
+    b.vx -= dx / d * f; b.vy -= dy / d * f;
+  }
+  const w = svgW(), h = svgH(), pad = 30;
+  for (const v of n) {
+    if (v.fx != null) { v.x = v.fx; v.y = v.fy; v.vx = v.vy = 0; continue; }
+    v.vx += (w / 2 - v.x) * 0.0025; v.vy += (h / 2 - v.y) * 0.0025;
+    v.x += v.vx * cool * 0.55; v.y += v.vy * cool * 0.55;
+    v.x = clamp(v.x, pad, w - pad); v.y = clamp(v.y, pad, h - pad);
+    v.vx *= 0.82; v.vy *= 0.82;
+  }
+  paint();
+  simAlpha -= 0.012; simTicks++;
+  if (simAlpha > 0.02 && simTicks < 400) simRaf = requestAnimationFrame(tick);
+  else { simRaf = null; if (!fitted) { fitted = true; fitView(); } }
+}
+
+/* --- rendering ------------------------------------------------------------ */
+function radius(n) { return 4 + Math.min(9, Math.sqrt(n.deg || 1) * 2.2); }
+
+function refreshLabels() {
+  const mode = $('graphLabels').value;
+  const total = simNodes.length;
+  const showAll = mode === 'on' || view.k >= 1.6 || total <= 40;
+  for (const el of nodeEls) {
+    const n = el.n;
+    let vis;
+    if (mode === 'off') vis = hoverId === n.id;
+    else if (showAll) vis = true;
+    else vis = n.deg >= labelCut || hubSet.has(n.id) || hoverId === n.id;
+    el.tx.style.opacity = vis ? 1 : 0;
+  }
+}
+
+function applyHighlight() {
+  for (const el of nodeEls) {
+    let dim = false;
+    if (familyFilter && familyOf(el.n.type) !== familyFilter) dim = true;
+    if (!dim && hoverId && el.n.id !== hoverId && !(state.adj.get(hoverId) || new Set()).has(el.n.id)) dim = true;
+    el.g.classList.toggle('dim', dim);
+  }
+  for (let i = 0; i < linkEls.length; i++) {
+    const l = simLinks[i];
+    let dim = false;
+    if (familyFilter && !(familyOf(l._s.type) === familyFilter && familyOf(l._t.type) === familyFilter)) dim = true;
+    if (!dim && hoverId && l.source !== hoverId && l.target !== hoverId) dim = true;
+    linkEls[i].classList.toggle('dim', dim);
+  }
+  refreshLabels();
+}
+
+function paint() {
+  for (const el of nodeEls) {
+    const x = el.n.x.toFixed(1), y = el.n.y.toFixed(1), r = radius(el.n);
+    el.c.setAttribute('cx', x); el.c.setAttribute('cy', y); el.c.setAttribute('r', r);
+    el.tx.setAttribute('x', (el.n.x + r + 3).toFixed(1)); el.tx.setAttribute('y', (el.n.y + 3).toFixed(1));
+  }
+  for (let i = 0; i < linkEls.length; i++) {
+    const l = simLinks[i], e = linkEls[i];
+    e.setAttribute('x1', l._s.x.toFixed(1)); e.setAttribute('y1', l._s.y.toFixed(1));
+    e.setAttribute('x2', l._t.x.toFixed(1)); e.setAttribute('y2', l._t.y.toFixed(1));
+  }
+}
+
+function draw(nodes, links) {
+  const svg = svgEl();
+  if (simRaf) cancelAnimationFrame(simRaf);
+  simRaf = null; hoverId = null;
+  const ids = new Map(nodes.map(n => [n.id, n]));
+  const valid = links.filter(l => ids.has(l.source) && ids.has(l.target));
+
+  const w = svgW(), h = svgH();
+  const deg = {};
+  valid.forEach(l => { deg[l.source] = (deg[l.source] || 0) + 1; deg[l.target] = (deg[l.target] || 0) + 1; });
+  nodes.forEach((n, i) => {
+    const a = (i / Math.max(nodes.length, 1)) * 2 * Math.PI;
+    const R = Math.min(w, h) * 0.34;
+    n.x = w / 2 + R * Math.cos(a); n.y = h / 2 + R * Math.sin(a);
+    n.vx = 0; n.vy = 0; n.fx = null; n.fy = null; n.deg = deg[n.id] || 0;
+  });
+  hubSet = new Set(nodes.slice().sort((a, b) => b.deg - a.deg).slice(0, 20).map(n => n.id));
+  // auto-label cut: roughly the top 12% most connected nodes stay labelled
+  const degsDesc = nodes.map(n => n.deg).sort((a, b) => b - a);
+  labelCut = Math.max(3, degsDesc[Math.min(degsDesc.length - 1, Math.floor(degsDesc.length * 0.12))] || 3);
+  state.adj = new Map(nodes.map(n => [n.id, new Set()]));
+  valid.forEach(l => { state.adj.get(l.source).add(l.target); state.adj.get(l.target).add(l.source); });
+
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.innerHTML = '';
+  const vp = document.createElementNS(NS, 'g');
+  vp.setAttribute('id', 'viewport');
+  svg.appendChild(vp);
+
+  linkEls = valid.map(l => { const e = document.createElementNS(NS, 'line'); vp.appendChild(e); return e; });
+  nodeEls = nodes.map(n => {
+    const g = document.createElementNS(NS, 'g');
+    g.setAttribute('class', 'node');
+    g.setAttribute('data-id', n.id);
+    const c = document.createElementNS(NS, 'circle');
+    c.setAttribute('fill', colorOf(n.type));
+    const tx = document.createElementNS(NS, 'text');
+    tx.textContent = (n.label || n.id).slice(0, 28);
+    g.appendChild(c); g.appendChild(tx); vp.appendChild(g);
+    return { g, c, tx, n };
+  });
+
+  nodeEls.forEach(el => {
+    el.g.addEventListener('click', () => {
+      if (suppressClick === el.n.id) { suppressClick = null; return; }
+      openNode(el.n.id);
+    });
+    el.g.addEventListener('dblclick', () => drillTo(el.n.id, el.n.label));
+    el.g.addEventListener('mouseenter', () => { hoverId = el.n.id; applyHighlight(); });
+    el.g.addEventListener('mouseleave', () => { hoverId = null; applyHighlight(); });
+    el.c.addEventListener('mousemove', ev => showTip(ev, el.n.id));
+  });
+
+  simNodes = nodes;
+  simLinks = valid.map(l => ({ ...l, _s: ids.get(l.source), _t: ids.get(l.target) }));
+  fitted = false; simTicks = 0; simAlpha = 0;
+  view = { k: 1, x: 0, y: 0 }; applyTransform();
+  startSim(1);
+}
+
+/* --- drill-down / back ------------------------------------------------------ */
+function ensureFocusOption(id, label) {
+  const sel = $('graphFocus');
+  if (![...sel.options].some(o => o.value === id)) {
+    const o = document.createElement('option');
+    o.value = id; o.textContent = '\u25b8 ' + label;
+    sel.appendChild(o);
+  }
+}
+function drillTo(id, label) {
+  const cur = $('graphFocus').selectedOptions[0];
+  state.focusStack.push({ focus: state.focus, label: cur && cur.value ? cur.textContent.replace(/^\u25b8 /, '') : null });
+  state.focus = id;
+  state.customFocus = { id, label: label || id };
+  ensureFocusOption(id, label || id);
+  $('graphFocus').value = id;
+  updateBack();
+  loadGraph();
+}
+function goBack() {
+  const prev = state.focusStack.pop();
+  if (!prev) return;
+  state.focus = prev.focus || null;
+  if (prev.focus) { ensureFocusOption(prev.focus, prev.label || prev.focus); $('graphFocus').value = prev.focus; }
+  else $('graphFocus').value = '';
+  updateBack();
+  loadGraph();
+}
+function resetView() {
+  state.focus = null; state.focusStack = []; state.customFocus = null;
+  $('graphFocus').value = ''; updateBack(); loadGraph();
+}
+function updateBack() { $('gBack').hidden = state.focusStack.length === 0; }
+
+/* --- legend (families) -------------------------------------------------------- */
+function drawLegend(counts) {
+  $('graphLegend').innerHTML = FAMILIES.map(f => {
+    const total = f.types.reduce((s, ty) => s + (counts[ty] || 0), 0);
+    if (!total) return '';
+    return `<button class="fam ${familyFilter === f.id ? 'on' : ''}" data-family="${f.id}">`
+      + `<i style="background:${f.color}"></i>${esc(f.label)} <b>${total}</b></button>`;
+  }).join('');
+  $('graphLegend').querySelectorAll('.fam').forEach(b => b.onclick = () => {
+    const f = b.dataset.family;
+    familyFilter = familyFilter === f ? null : f;
+    drawLegend(counts); applyHighlight();
+  });
+}
+
+/* --- in-graph search ----------------------------------------------------------- */
+async function graphSearch(q) {
+  const box = $('graphSearchList');
+  if (!q || q.length < 2) { box.style.display = 'none'; return; }
+  const data = await (await fetch('/api/search?q=' + encodeURIComponent(q) + '&limit=8')).json();
+  const rows = data.rows || [];
+  box.innerHTML = rows.length
+    ? rows.map(r => `<button data-id="${esc(r.id)}" data-label="${esc(r.label)}"><span class="t">${esc(r.type)}</span>${esc(r.label)}</button>`).join('')
+    : `<button disabled>${esc(t('browse.nothing'))}</button>`;
+  box.style.display = 'block';
+  box.querySelectorAll('button[data-id]').forEach(b => b.onclick = () => {
+    box.style.display = 'none'; $('graphSearch').value = '';
+    drillTo(b.dataset.id, b.dataset.label);
+    openNode(b.dataset.id);
+  });
+}
+
+/* --- controls --------------------------------------------------------------------- */
 async function loadGraph() {
-  const params = new URLSearchParams({depth: $('graphDepth').value || '1'});
+  const params = new URLSearchParams({ depth: $('graphDepth').value || '1' });
   if (state.focus) params.set('focus', state.focus);
   const data = await (await fetch('/api/graph?' + params.toString())).json();
   state.nodes = data.nodes || []; state.links = data.links || [];
   draw(state.nodes, state.links);
   const counts = {};
   state.nodes.forEach(n => counts[n.type] = (counts[n.type] || 0) + 1);
-  $('graphInfo').textContent = `${state.nodes.length} nodes · ${state.links.length} edges`;
-  $('graphLegend').innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1])
-    .map(([ty, c]) => `<span><i style="background:${colorOf(ty)}"></i>${esc(ty)} ${c}</span>`).join('');
+  $('graphInfo').textContent = `${state.nodes.length} nodes \u00b7 ${state.links.length} edges`;
+  drawLegend(counts);
+  applyHighlight();
 }
-$('graphFocus').onchange = e => { state.focus = e.target.value || null; loadGraph(); };
+$('graphFocus').onchange = e => { state.focus = e.target.value || null; state.focusStack = []; state.customFocus = null; updateBack(); loadGraph(); };
 $('graphDepth').onchange = loadGraph;
+$('graphLabels').onchange = refreshLabels;
+$('gzIn').onclick = () => zoomBy(1.25);
+$('gzOut').onclick = () => zoomBy(1 / 1.25);
+$('gFit').onclick = () => fitView();
+$('gReset').onclick = resetView;
+$('gBack').onclick = goBack;
 
-function draw(nodes, links) {
-  const svg = $('svg');
-  const w = svg.clientWidth || 900, h = svg.clientHeight || 520;
-  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
-  const ids = new Map(nodes.map(n => [n.id, n]));
-  const valid = links.filter(l => ids.has(l.source) && ids.has(l.target));
+let searchTimer = null;
+$('graphSearch').oninput = () => { clearTimeout(searchTimer); searchTimer = setTimeout(() => graphSearch($('graphSearch').value.trim()), 220); };
+$('graphSearch').onkeydown = e => { if (e.key === 'Enter') { clearTimeout(searchTimer); graphSearch($('graphSearch').value.trim()); } };
+document.addEventListener('click', e => {
+  if (!e.target.closest || !e.target.closest('.gsearch')) $('graphSearchList').style.display = 'none';
+});
 
-  // deterministic-ish circular seed, then a small force simulation
-  nodes.forEach((n, i) => {
-    const a = (i / Math.max(nodes.length, 1)) * 2 * Math.PI;
-    n.x = w / 2 + Math.min(w, h) * 0.34 * Math.cos(a);
-    n.y = h / 2 + Math.min(w, h) * 0.34 * Math.sin(a);
-    n.vx = 0; n.vy = 0;
-  });
-  const deg = {};
-  valid.forEach(l => { deg[l.source] = (deg[l.source] || 0) + 1; deg[l.target] = (deg[l.target] || 0) + 1; });
-  for (let step = 0; step < 320; step++) {
-    const cool = 1 - step / 320;
-    for (let i = 0; i < nodes.length; i++) {
-      for (let j = i + 1; j < nodes.length; j++) {
-        const a = nodes[i], b = nodes[j];
-        let dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy || 0.01;
-        if (d2 > 62500) continue;
-        const f = 900 / d2;
-        const d = Math.sqrt(d2);
-        a.vx -= (dx / d) * f; a.vy -= (dy / d) * f;
-        b.vx += (dx / d) * f; b.vy += (dy / d) * f;
-      }
+/* --- pan / zoom / node dragging ------------------------------------------------------ */
+(function enableGraphMouse() {
+  const svg = svgEl();
+  svg.addEventListener('mousedown', e => {
+    const g = e.target.closest ? e.target.closest('g.node') : null;
+    if (g) {
+      dragNode = simNodes.find(n => n.id === g.getAttribute('data-id')) || null;
+      dragMoved = 0;
+      e.preventDefault();
+    } else {
+      panning = { x: e.clientX, y: e.clientY };
+      svg.style.cursor = 'grabbing';
     }
-    valid.forEach(l => {
-      const a = ids.get(l.source), b = ids.get(l.target);
-      const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01;
-      const f = (d - 70) * 0.012;
-      a.vx += (dx / d) * f; a.vy += (dy / d) * f;
-      b.vx -= (dx / d) * f; b.vy -= (dy / d) * f;
-    });
-    nodes.forEach(n => {
-      n.vx += (w / 2 - n.x) * 0.0025; n.vy += (h / 2 - n.y) * 0.0025;
-      n.x += n.vx * cool * 0.55; n.y += n.vy * cool * 0.55;
-      n.vx *= 0.82; n.vy *= 0.82;
-      const pad = 26;
-      n.x = Math.max(pad, Math.min(w - pad, n.x));
-      n.y = Math.max(pad, Math.min(h - pad, n.y));
-    });
-  }
-
-  const r = n => 4 + Math.min(9, Math.sqrt(deg[n.id] || 1) * 2.2);
-  svg.innerHTML =
-    `<g id="viewport">
-      ${valid.map(l => `<line x1="${ids.get(l.source).x.toFixed(1)}" y1="${ids.get(l.source).y.toFixed(1)}"
-          x2="${ids.get(l.target).x.toFixed(1)}" y2="${ids.get(l.target).y.toFixed(1)}"></line>`).join('')}
-      ${nodes.map(n => `<g class="node" data-id="${esc(n.id)}">
-          <circle cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${r(n)}" fill="${colorOf(n.type)}"></circle>
-          <text x="${(n.x + r(n) + 3).toFixed(1)}" y="${(n.y + 3).toFixed(1)}">${esc((n.label || n.id).slice(0, 28))}</text>
-        </g>`).join('')}
-    </g>`;
-  svg.querySelectorAll('.node').forEach(g => {
-    g.onclick = () => openNode(g.dataset.id);
-    g.querySelector('circle').onmousemove = ev => showTip(ev, g.dataset.id);
   });
-  enablePanZoom(svg);
-}
+  window.addEventListener('mousemove', e => {
+    if (dragNode) {
+      const pt = toSvg(e);
+      if (Math.abs(pt.x - dragNode.x) > 1 || Math.abs(pt.y - dragNode.y) > 1) dragMoved++;
+      dragNode.fx = pt.x; dragNode.fy = pt.y;
+      startSim(0.3);
+    } else if (panning) {
+      view.x += e.clientX - panning.x; view.y += e.clientY - panning.y;
+      panning = { x: e.clientX, y: e.clientY };
+      applyTransform();
+    }
+  });
+  window.addEventListener('mouseup', () => {
+    if (dragNode) {
+      if (dragMoved > 3) suppressClick = dragNode.id;
+      dragNode.fx = dragNode.fy = null; dragNode = null;
+      startSim(0.25);
+    }
+    panning = null; svg.style.cursor = 'grab';
+  });
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = svg.getBoundingClientRect();
+    zoomBy(e.deltaY < 0 ? 1.12 : 1 / 1.12, e.clientX - r.left, e.clientY - r.top);
+  }, { passive: false });
+  window.addEventListener('resize', () => { if (fitted) fitView(); });
+})();
 
+/* --- tooltip -------------------------------------------------------------------------- */
 let tip = null;
 function showTip(ev, id) {
   const n = state.nodes.find(x => x.id === id);
   if (!n) return;
-  if (!tip) { tip = document.createElement('div'); tip.style.cssText =
-    'position:fixed;background:#0b1018;border:1px solid #2a3548;border-radius:8px;padding:6px 9px;font-size:12px;z-index:60;pointer-events:none;max-width:280px';
-    document.body.appendChild(tip); }
+  if (!tip) {
+    tip = document.createElement('div');
+    tip.style.cssText =
+      'position:fixed;background:#0b1018;border:1px solid #2a3548;border-radius:8px;padding:6px 9px;font-size:12px;z-index:60;pointer-events:none;max-width:280px';
+    document.body.appendChild(tip);
+  }
   tip.innerHTML = `<b>${esc(n.label || n.id)}</b><br><span style="color:#94a3b8">${esc(n.type)}</span><br>${esc((n.definition || '').slice(0, 140))}`;
   tip.style.left = (ev.clientX + 14) + 'px';
   tip.style.top = (ev.clientY + 14) + 'px';
 }
 document.addEventListener('mousemove', e => { if (tip && e.target.tagName !== 'circle') tip.remove(), tip = null; });
-
-function enablePanZoom(svg) {
-  const g = svg.querySelector('#viewport');
-  let scale = 1, tx = 0, ty = 0, drag = null;
-  const apply = () => g.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
-  svg.onwheel = e => {
-    e.preventDefault();
-    const k = e.deltaY < 0 ? 1.12 : 1 / 1.12;
-    const rect = svg.getBoundingClientRect();
-    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
-    tx = mx - (mx - tx) * k; ty = my - (my - ty) * k; scale *= k; apply();
-  };
-  svg.onmousedown = e => { if (e.target.tagName === 'circle') return; drag = {x: e.clientX, y: e.clientY}; svg.style.cursor = 'grabbing'; };
-  window.addEventListener('mouseup', () => { drag = null; svg.style.cursor = 'grab'; });
-  svg.onmousemove = e => {
-    if (!drag) return;
-    tx += e.clientX - drag.x; ty += e.clientY - drag.y;
-    drag = {x: e.clientX, y: e.clientY}; apply();
-  };
-}
 
 boot().catch(e => { $('summary').innerHTML = `<span class="err">${esc(e.message)}</span>`; });
 </script>

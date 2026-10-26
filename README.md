@@ -157,6 +157,14 @@ Court tab and the graph need no Graphviz). It asks questions in plain English an
 shows its work: every answer comes with the parsed intent, the slots that were
 filled, the SPARQL, the Cypher and the JSON graph pattern that produced it.
 
+The Graph tab is built for first-time users: an **animated force layout** you can
+reshape by **dragging nodes**; hovering a node **spotlights its neighbourhood**;
+**double-clicking drills down** around that node (depth selectable, with a
+`← back` trail); the legend filters by **families** (plays, schemes, zones,
+people, rules); a search box re-aims the graph at any node; labels are
+**adaptive** (hubs first, all of them when zoomed in, or none); and zoom / fit /
+reset buttons plus the mouse wheel keep the view under control.
+
 | Route | Returns |
 | --- | --- |
 | `/api/stats` | node/edge counts, type histogram, predicate histogram, dataset manifest, validation |
