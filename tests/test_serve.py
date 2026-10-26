@@ -154,6 +154,15 @@ class TestIndexI18n(unittest.TestCase):
         missing = used - set(i18n["en"])
         self.assertEqual(missing, set(), f"i18n keys used in markup/JS but undefined: {sorted(missing)}")
 
+    def test_graph_toolbar_has_beginner_controls(self):
+        """The graph must be manipulable without prior knowledge: zoom, fit,
+        reset, back, in-graph search, label mode and a localized hint line."""
+        for needle in ('id="gzIn"', 'id="gzOut"', 'id="gFit"', 'id="gReset"',
+                       'id="gBack"', 'id="graphSearch"', 'id="graphSearchList"',
+                       'id="graphLabels"', 'data-i18n="graph.hint"',
+                       'data-i18n="depth.3"'):
+            self.assertIn(needle, self.html, f"missing graph control: {needle}")
+
     def test_technical_terms_stay_english(self):
         """The instruction: technical terms in English, navigation localized."""
         i18n = self._dictionary()
