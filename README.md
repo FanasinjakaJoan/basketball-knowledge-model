@@ -170,6 +170,16 @@ filled, the SPARQL, the Cypher and the JSON graph pattern that produced it.
 Everything is read-only and every path is a relative `/api/…` fetch, so it sits
 happily behind a proxy or on a LAN.
 
+**Interface languages.** The navigation chrome ships in **English, Français and
+Malagasy** — switch with the EN / FR / MG buttons in the header (choice kept in
+`localStorage`, first visit follows the browser language). Per the project
+convention, basketball and graph terminology ("pick and roll", "drop coverage",
+"scheme", "nodes", "edges", intent names…) and all graph content stay in
+English in every language. To add a language: append one block to the
+strict-JSON `I18N` dictionary in `web/index.html` and one button to the header
+switcher — `tests/test_serve.py` enforces that every language defines the same
+key set as the markup uses.
+
 ### The court renderer
 
 ```console
