@@ -1,0 +1,27 @@
+# Basketball Knowledge Model -- example query
+# question : What kind of players does motion offence need?
+# intent   : requirements
+# slots    : target=play:motion-offense
+# note     : Requirements roll up from steps and from the action types they instantiate.
+# generated: python scripts/gen_queries.py (do not edit by hand)
+PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>
+PREFIX bkr:  <https://w3id.org/basketball-kg/resource/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+# Archetypes and skills a scheme/play/action demands, rolled up from its steps.
+SELECT ?requirement ?reqLabel ?kind ?skills
+WHERE {
+  FILTER(?target = <https://w3id.org/basketball-kg/resource/play/motion-offense>)
+  { ?target bk:requires ?requirement }
+  UNION { ?target bk:hasStep ?step . ?step bk:requires ?requirement }
+  UNION { ?target bk:hasStep ?step . ?step bk:hasActionType ?type . ?type bk:requires ?requirement }
+  UNION { ?target bk:hasActionType ?type . ?type bk:requires ?requirement }
+  ?requirement skos:prefLabel ?reqLabel .
+  BIND(IF(EXISTS { ?requirement a bk:Archetype }, "archetype",
+       IF(EXISTS { ?requirement a bk:Skill }, "skill", "other")) AS ?kind)
+  OPTIONAL { SELECT ?requirement (GROUP_CONCAT(?skillLabel; SEPARATOR=", ") AS ?skills)
+            WHERE { ?requirement bk:requires/skos:prefLabel ?skillLabel }
+            GROUP BY ?requirement }
+}
+GROUP BY ?requirement ?reqLabel ?kind
+ORDER BY ?kind ?reqLabel

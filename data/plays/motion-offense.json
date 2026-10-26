@@ -1,0 +1,250 @@
+{
+  "id": "dataset:play-motion-offense",
+  "label": "Motion Offence - a rule-based, read-and-react system",
+  "definition": "Motion is not a play but a set of rules executed at pace: pass and cut, screen away, fill the vacant spot, backdoor the overplay, and make half-second decisions. The graph below models the canonical sequence (pass -> cut -> fill -> screen away -> read -> attack), with the branch point on how the defender plays the cut.",
+  "props": {
+    "formation": "5-out (or 4-out-1-in with a dive man)",
+    "key": [
+      "Pass and cut: every pass is followed by movement by the passer",
+      "Fill from the bottom: never leave two players in one spot",
+      "Backdoor a defender who overplays; basket-cut a defender who relaxes",
+      "Half-second decisions: catch, read, shoot-pass-drive",
+      "One player per spot: the corners must be occupied at all times",
+      "Motion is a spacing offence: it fails the moment two players share an area"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "play:motion-offense",
+      "type": "OffensivePlay",
+      "label": "Motion Offence",
+      "definition": "A continuous, rule-based offensive sequence rather than a scripted play.",
+      "props": { "aliases": ["motion", "read-and-react", "passing game"], "shotClockBudgetSeconds": 16 },
+      "edges": {
+        "hasFormation": "form:five-out",
+        "appliesIn": ["sit:half-court", "sit:early-offense", "sit:scramble"],
+        "requires": ["arch:secondary-creator", "arch:off-ball-sharpshooter", "arch:three-and-d-wing"],
+        "produces": ["outcome:rim-attempt", "outcome:above-break-three", "outcome:corner-three", "outcome:open-midrange", "outcome:foul-drawn"],
+        "hasCounter": ["counter:switch-vs-motion", "counter:physicality-vs-motion"],
+        "relatedTo": ["scheme:motion-offense", "scheme:five-out"]
+      }
+    },
+
+    {
+      "id": "mot:s1-spacing",
+      "type": "Action",
+      "label": "Set the five spots",
+      "definition": "One player at the top, two on the wings and two in the corners (5-out); or four on the arc with a dive man on the weak-side block (4-out-1-in).",
+      "props": { "order": 1, "participants": "all five offenders", "key": ["Spacing is the system: five spots, five players, no exceptions", "The corners are the most valuable real estate on the floor"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:spacing",
+        "actor": "role:off-ball-mover",
+        "occursIn": "zone:frontcourt",
+        "constrainedBy": ["rule:three-point-distance", "rule:shot-clock-24"],
+        "produces": ["outcome:rim-attempt"],
+        "precedes": ["mot:s2-pass"]
+      }
+    },
+    {
+      "id": "mot:s2-pass",
+      "type": "Action",
+      "label": "Pass the ball",
+      "definition": "Move the ball with a purpose: pass to a teammate who is in a position to shoot, drive or pass again. The pass initiates the read for everyone else.",
+      "props": { "order": 2, "key": ["Pass to score, not to relocate the problem", "Ball reversal is the cheapest way to break a set defence"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:ball-reversal",
+        "actor": "role:connector",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:wing-three-left",
+        "target": "role:spot-up-shooter",
+        "requires": ["skill:passing-vision"],
+        "precedes": ["mot:s3-cut", "mot:s4-fill"]
+      }
+    },
+    {
+      "id": "mot:s3-cut",
+      "type": "Action",
+      "label": "Cut after the pass",
+      "definition": "The passer does not admire his pass: he cuts hard to the rim, or screens away for a teammate who will cut into his spot.",
+      "props": { "order": 3, "key": ["Cut to score: run to the rim with the intention of catching the ball", "Sell the cut: change of pace and a hand target"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:basket-cut",
+        "actor": "role:off-ball-mover",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:restricted-area",
+        "constrainedBy": ["rule:freedom-of-movement"],
+        "requires": ["skill:off-ball-movement"],
+        "produces": ["outcome:rim-attempt", "outcome:foul-drawn"],
+        "precedes": ["mot:d1-read-the-defender"]
+      }
+    },
+    {
+      "id": "mot:s4-fill",
+      "type": "Action",
+      "label": "Fill the vacant spot",
+      "definition": "The passer has cut, so the next player up fills the spot he vacated, keeping the five spots occupied and the spacing honest.",
+      "props": { "order": 4, "parallelWith": "mot:s3-cut", "key": ["Fill from the bottom: the nearest player to the ball fills first", "Motion dies the moment two players occupy one spot"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:fill-spot",
+        "actor": "role:connector",
+        "endsIn": "zone:top-of-key-three",
+        "requires": ["skill:off-ball-movement"],
+        "precedes": ["mot:s5-screen-away"]
+      }
+    },
+    {
+      "id": "mot:d1-read-the-defender",
+      "type": "Decision",
+      "label": "Read how the defender plays the cut",
+      "definition": "The branch point: a defender who trails the cut is beaten by continuing it; a defender who overplays the passing lane is beaten behind him.",
+      "props": { "order": 5, "condition": "position and attention of the cutter's defender", "key": ["Read the defender's chest, not the ball", "The decision is made in half a second: catch, read, go"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "selectedOption": ["mot:s6-basket-cut", "mot:s7-backdoor-cut", "mot:s8-relocate"]
+      }
+    },
+    {
+      "id": "mot:s6-basket-cut",
+      "type": "Action",
+      "label": "Finish the basket cut",
+      "definition": "The defender has relaxed or turned his head: continue the cut to the rim for a lay-up or a duck-in feed.",
+      "props": { "order": 6, "branch": "defender trails", "key": ["Cut rim-to-rim, not to the ball", "Present a target hand and get your feet set if the ball is late"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:basket-cut",
+        "actor": "role:off-ball-mover",
+        "startsIn": "zone:wing-three-left",
+        "endsIn": "zone:restricted-area",
+        "constrainedBy": ["rule:freedom-of-movement"],
+        "requires": ["skill:off-ball-movement", "skill:rim-finishing"],
+        "produces": ["outcome:rim-attempt", "outcome:foul-drawn"]
+      }
+    },
+    {
+      "id": "mot:s7-backdoor-cut",
+      "type": "Action",
+      "label": "Backdoor the overplay",
+      "definition": "The defender is denying the passing lane: cut behind him to the rim, and the passer hits him on the backdoor.",
+      "props": { "order": 6, "branch": "defender overplays", "key": ["One hard fake to the ball, then go behind", "The passer must wait for the cut to clear the defender's hip"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:backdoor-cut",
+        "actor": "role:off-ball-mover",
+        "startsIn": "zone:wing-three-left",
+        "endsIn": "zone:restricted-area",
+        "constrainedBy": ["rule:freedom-of-movement"],
+        "requires": ["skill:off-ball-movement", "skill:rim-finishing"],
+        "produces": ["outcome:rim-attempt", "outcome:lob-dunk", "outcome:foul-drawn"],
+        "answers": "counter:physicality-vs-motion"
+      }
+    },
+    {
+      "id": "mot:s8-relocate",
+      "type": "Action",
+      "label": "Relocate to an open spot",
+      "definition": "The cut is not on, so move to a new spot on the arc (usually lifting to the wing or drifting to the corner) and stay shot-ready.",
+      "props": { "order": 6, "branch": "cut denied, defence set", "key": ["Move on the flight of the pass, not after the catch", "Relocate to a spot where you can shoot, not to a spot where you are merely open"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:relocate",
+        "actor": "role:off-ball-mover",
+        "startsIn": "zone:wing-three-left",
+        "endsIn": "zone:corner-three-left",
+        "constrainedBy": ["rule:freedom-of-movement"],
+        "requires": ["skill:off-ball-movement", "skill:catch-and-shoot"],
+        "produces": ["outcome:corner-three"],
+        "precedes": ["mot:s9-screen-away"]
+      }
+    },
+    {
+      "id": "mot:s5-screen-away",
+      "type": "Action",
+      "label": "Screen away from the ball",
+      "definition": "While the ball is on one side, the weak-side players screen for each other: a down screen to free a shooter to the corner, or a flare screen to free him to the wing.",
+      "props": { "order": 7, "key": ["Screen the man who is being watched, not the man who is watching the ball", "Screener then re-screens or pops: never screen and stand"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:down-screen",
+        "actor": "role:screener",
+        "target": "role:spot-up-shooter",
+        "startsIn": "zone:elbow-right",
+        "endsIn": "zone:corner-three-right",
+        "constrainedBy": ["rule:legal-screen", "rule:freedom-of-movement"],
+        "requires": ["skill:screen-setting"],
+        "precedes": ["mot:s10-handoff"]
+      }
+    },
+    {
+      "id": "mot:s9-screen-away",
+      "type": "Action",
+      "label": "Screener re-screens or pops",
+      "definition": "After setting the screen, the screener either re-screens for the same teammate or pops to the arc, keeping the action alive instead of standing.",
+      "props": { "order": 8, "key": ["The second screen is often the one that works", "Pop with your hands ready: the pass may come immediately"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:stagger-screen",
+        "actor": "role:screener",
+        "occursIn": "zone:elbow-right",
+        "constrainedBy": ["rule:legal-screen"],
+        "requires": ["skill:screen-setting"]
+      }
+    },
+    {
+      "id": "mot:s10-handoff",
+      "type": "Action",
+      "label": "Dribble hand-off or dribble-at",
+      "definition": "The receiver of the screen either hands the ball off to the cutter or attacks the closeout with a dribble hand-off, forcing the defence to defend a moving screen and a new ball handler at once.",
+      "props": { "order": 9, "key": ["A hand-off to a shooter is a screen and a pass in one motion", "The hand-off receiver must be a shooting or driving threat, or the defence just switches it"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:dribble-handoff",
+        "actor": "role:connector",
+        "startsIn": "zone:wing-three-right",
+        "endsIn": "zone:top-of-key-three",
+        "target": "role:spot-up-shooter",
+        "requires": ["skill:ball-handling", "skill:passing-vision", "arch:secondary-creator"],
+        "produces": ["outcome:above-break-three", "outcome:rim-attempt"],
+        "precedes": ["mot:s11-drive-and-kick"]
+      }
+    },
+    {
+      "id": "mot:s11-drive-and-kick",
+      "type": "Action",
+      "label": "Drive the closeout and kick it out",
+      "definition": "Attack a recovering closeout, draw the collapse, and kick the ball to the relocated shooter on the arc.",
+      "props": { "order": 10, "key": ["Attack the shoulder of the closeout, not the chest", "The kick-out is the shot, not the drive: the drive is the setup"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:kick-out-pass",
+        "actor": "role:connector",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:corner-three-left",
+        "target": "role:spot-up-shooter",
+        "constrainedBy": ["rule:traveling-gather"],
+        "requires": ["skill:ball-handling", "skill:passing-vision"],
+        "produces": ["outcome:corner-three", "outcome:foul-drawn"],
+        "precedes": ["mot:s12-crash"]
+      }
+    },
+    {
+      "id": "mot:s12-crash",
+      "type": "Action",
+      "label": "Crash the glass or retreat to safety",
+      "definition": "On the shot, two players crash the offensive boards while two retreat to protect against transition, and the shooter sprints back.",
+      "props": { "order": 11, "key": ["Crash from the perimeter, where no one is blocking you out", "Never send all five to the glass: transition defence is the price"] },
+      "edges": {
+        "stepOf": "play:motion-offense",
+        "hasActionType": "atype:crash-offensive-glass",
+        "actor": "role:rebounder",
+        "occursIn": "zone:paint",
+        "constrainedBy": ["rule:shot-clock-24"],
+        "requires": ["skill:rebounding"],
+        "produces": ["outcome:offensive-rebound"]
+      }
+    }
+  ]
+}

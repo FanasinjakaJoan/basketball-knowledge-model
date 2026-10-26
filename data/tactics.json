@@ -1,0 +1,477 @@
+{
+  "id": "dataset:tactics",
+  "label": "Schemes, coverages, formations, situations, outcomes and counters",
+  "definition": "The scheme layer: how teams organise, which ball-screen coverage they play, when a scheme is used, what it is designed to produce, and the tactical answers to it.",
+  "nodes": [
+    { "id": "sit:half-court", "type": "Situation", "label": "Half-court", "definition": "A set defence is in place and the offence must generate a shot against it." },
+    { "id": "sit:transition", "type": "Situation", "label": "Transition", "definition": "Possession immediately after a change of possession, before the defence can set its shell." },
+    { "id": "sit:early-offense", "type": "Situation", "label": "Early offence", "definition": "The first 4-8 seconds: pushing the ball to get a shot before the defence organises, or to flow straight into a set." },
+    { "id": "sit:late-clock", "type": "Situation", "label": "Late shot clock", "definition": "Under ~8 seconds on the shot clock: no time for a second action, one read only." },
+    { "id": "sit:slob", "type": "Situation", "label": "Sideline out of bounds (SLOB)", "definition": "Inbounding from the sideline; the defence can trap the passer or deny the first option." },
+    { "id": "sit:blob", "type": "Situation", "label": "Baseline out of bounds (BLOB)", "definition": "Inbounding under the offensive basket; the defence must guard the rim and the arc at once." },
+    { "id": "sit:ato", "type": "Situation", "label": "After timeout (ATO)", "definition": "A scripted play run out of a stoppage, with a designed first and second option." },
+    { "id": "sit:clutch", "type": "Situation", "label": "Clutch", "definition": "The last five minutes with a margin of five points or fewer." },
+    { "id": "sit:scramble", "type": "Situation", "label": "Scramble / broken play", "definition": "The called play has broken down; players must play out of rules and spacing rather than script." },
+    { "id": "sit:press", "type": "Situation", "label": "Against a press", "definition": "The defence is applying full-court or three-quarter-court pressure." },
+
+    { "id": "form:five-out", "type": "Formation", "label": "5-Out", "definition": "All five players start outside the arc; the lane is empty and the rim protector must defend in space." },
+    { "id": "form:four-out-one-in", "type": "Formation", "label": "4-Out-1-In", "definition": "Four perimeter players plus one big on the block or the dunker spot; keeps a rim threat while spacing the arc." },
+    { "id": "form:horns", "type": "Formation", "label": "Horns", "definition": "Two bigs at the elbows, two shooters in the corners, ball handler at the top; opens pick-and-roll, hand-off and high-low actions." },
+    { "id": "form:box", "type": "Formation", "label": "Box", "definition": "Four players in a box across the lane; common BLOB alignment for screens and misdirection." },
+    { "id": "form:two-three-shell", "type": "Formation", "label": "2-3 Shell", "definition": "Defensive alignment: two perimeter defenders up top, three across the bottom of the zone." },
+    { "id": "form:three-two-shell", "type": "Formation", "label": "3-2 Shell", "definition": "Defensive alignment: three defenders across the top, two on the back line." },
+    { "id": "form:one-two-one-one", "type": "Formation", "label": "1-2-1-1 Press", "definition": "Full-court press alignment: one at the ball, two at the first trap line, one at mid-court, one deep." },
+
+    { "id": "coverage:drop", "type": "Coverage", "label": "Drop", "definition": "The screener's defender sinks well below the screen to protect the rim and dares the ball handler to shoot the pull-up.", "props": { "vulnerability": "Open pull-up three for a shot-making ball handler", "key": ["Protects the rim and the defensive glass", "Requires a rim protector who can cover ground on the recovery"] }, "edges": { "appliesIn": ["sit:half-court"], "vulnerableTo": ["arch:pull-up-shooter", "arch:pick-and-roll-initiator"] } },
+    { "id": "coverage:at-the-level", "type": "Coverage", "label": "At the level", "definition": "The screener's defender meets the ball at the level of the screen, then recovers with the roll, splitting the difference between drop and blitz.", "props": { "vulnerability": "Behind-the-play passes to the roller if the recovery is late", "key": ["The default 'no-easy-answer' coverage", "Demands a big who can move his feet in space"] } },
+    { "id": "coverage:show-and-recover", "type": "Coverage", "label": "Show and recover (hedge)", "definition": "The screener's defender steps out to stall the ball handler for a beat, then sprints back to the roller.", "props": { "vulnerability": "The short roll: the screener's man is out of position to cover the elbow catch", "key": ["Disrupts the timing of the action without giving up the rim", "The weak-side low man must tag the roller on the recovery"] } },
+    { "id": "coverage:blitz", "type": "Coverage", "label": "Blitz", "definition": "Both defenders attack the ball handler off the screen, forcing the ball out of the star's hands.", "props": { "vulnerability": "The 4-on-3 behind the trap: a short-roll passer or a hub will dissect it", "key": ["Only works if the back line rotates 'next man up' instantly", "Invites a turnover and early offence, or a wide-open corner three"] } },
+    { "id": "coverage:switch", "type": "Coverage", "label": "Switch", "definition": "The two defenders simply exchange assignments, taking away the pass out of the screen.", "props": { "vulnerability": "The mismatch: a smaller defender on a post scorer, or a slow big on a guard in space", "key": ["Removes the first advantage entirely", "Requires five players who can hold up in a mismatch, plus scram rotations"] } },
+    { "id": "coverage:ice", "type": "Coverage", "label": "ICE (Blue / Down)", "definition": "The on-ball defender forces the ball handler towards the baseline, using the sideline as a second defender.", "props": { "vulnerability": "The reject: a ball handler who refuses the screen and turns back to the middle", "key": ["Takes away the pull-up and the middle drive", "The weak-side defenders must be ready for the kick-out and the reversal"] } },
+    { "id": "coverage:scram-switch", "type": "Coverage", "label": "Scram switch", "definition": "Not a primary coverage but a repair: after a switch, a third defender swaps onto the mismatch so a guard is never left on a post scorer.", "props": { "vulnerability": "The scram itself can be late, leaving a brief open window", "key": ["Turns switch coverage into a full five-man scheme", "Communicated before the action, not during it"] } },
+
+    {
+      "id": "scheme:pick-and-roll",
+      "type": "OffensiveScheme",
+      "label": "Pick and Roll (ball screen)",
+      "definition": "The organising action of modern basketball: a ball handler and a screener combine against two defenders, and the offence's job is to turn the resulting two-on-two advantage into an advantage for all five.",
+      "props": {
+        "key": [
+          "The angle of the screen decides everything: set it on the defender's shoulder, not on his hip",
+          "The ball handler must come off shoulder-to-hip, not wide around the screen",
+          "The roll is a threat even when it is not passed to: it occupies the rim protector",
+          "Spacing is the real weapon: two corner shooters and a weak-side lift punish any rotation"
+        ],
+        "note": "Treated here both as a scheme (the system) and as the model for play:pick-and-roll (the graph)."
+      },
+      "edges": {
+        "hasFormation": "form:four-out-one-in",
+        "appliesIn": ["sit:half-court", "sit:early-offense", "sit:late-clock", "sit:ato", "sit:clutch"],
+        "requires": ["arch:pick-and-roll-initiator", "arch:rim-running-big"],
+        "produces": ["outcome:rim-attempt", "outcome:corner-three", "outcome:open-midrange", "outcome:mismatch-created", "outcome:foul-drawn"],
+        "hasCounter": ["counter:switch-vs-pnr", "counter:blitz-vs-pnr", "counter:ice-vs-pnr"]
+      }
+    },
+    {
+      "id": "scheme:motion-offense",
+      "type": "OffensiveScheme",
+      "label": "Motion Offence",
+      "definition": "A rule-based, read-and-react offence: pass, cut, screen away, and fill. There is no fixed play, only a set of principles (pass and cut, fill from the bottom, screen the ball, backdoor the overplay) executed against five moving defenders.",
+      "props": {
+        "key": [
+          "Pass and cut: after every pass the passer cuts or screens away",
+          "Fill from the bottom: never leave two players in one spot",
+          "Backdoor cut when overplayed; basket cut when the defender relaxes",
+          "Half-second decisions: catch, read, shoot-pass-drive",
+          "Spacing rule: one player in each of the five spots, corners always filled"
+        ]
+      },
+      "edges": {
+        "hasFormation": "form:five-out",
+        "appliesIn": ["sit:half-court", "sit:early-offense", "sit:scramble"],
+        "requires": ["arch:secondary-creator", "arch:off-ball-sharpshooter", "arch:three-and-d-wing"],
+        "produces": ["outcome:rim-attempt", "outcome:above-break-three", "outcome:open-midrange", "outcome:foul-drawn"],
+        "hasCounter": ["counter:switch-vs-motion", "counter:physicality-vs-motion"]
+      }
+    },
+    {
+      "id": "scheme:five-out",
+      "type": "OffensiveScheme",
+      "label": "5-Out Spacing",
+      "definition": "An offensive system in which every player starts beyond the arc, emptying the lane so that drives, hand-offs and rolls happen against a defence with no help at the rim.",
+      "props": { "key": ["Removes the rim protector from the play", "Demands five players who can shoot, pass and drive a closeout"] },
+      "edges": {
+        "hasFormation": "form:five-out",
+        "appliesIn": ["sit:half-court", "sit:late-clock"],
+        "requires": ["arch:spacing-big", "arch:hub-playmaker"],
+        "hasCounter": ["counter:switch-vs-motion"]
+      }
+    },
+    {
+      "id": "scheme:spain-pick-and-roll",
+      "type": "OffensiveScheme",
+      "label": "Spain Pick and Roll",
+      "definition": "A ball screen in which a third player sets a back screen on the screener immediately before the ball screen, creating a roll-and-replace action that punishes aggressive coverages.",
+      "props": { "key": ["The back screen forces the defence to choose between the ball screen and the slipping screener", "The timing is everything: the back screen must land as the ball screen is set"] },
+      "edges": {
+        "hasFormation": "form:four-out-one-in",
+        "appliesIn": ["sit:half-court", "sit:ato"],
+        "requires": ["arch:pick-and-roll-initiator", "arch:rim-running-big"],
+        "produces": ["outcome:rim-attempt", "outcome:corner-three"]
+      }
+    },
+    {
+      "id": "scheme:horns",
+      "type": "OffensiveScheme",
+      "label": "Horns",
+      "definition": "A two-big-at-the-elbows set that lets the offence run pick-and-roll, hand-offs, high-low and split action from the same alignment.",
+      "props": { "key": ["Same look, four different actions: the defence cannot load up on any one", "The corner shooters must stay in the corners to keep the lane clear"] },
+      "edges": {
+        "hasFormation": "form:horns",
+        "appliesIn": ["sit:half-court", "sit:ato", "sit:late-clock"],
+        "requires": ["arch:hub-playmaker", "arch:short-roll-passer"]
+      }
+    },
+    {
+      "id": "scheme:early-offense",
+      "type": "OffensiveScheme",
+      "label": "Early Offence / Push",
+      "definition": "Attacking in the first 4-8 seconds: rim runs, drag screens and early hand-offs before the defence can set its shell.",
+      "props": { "key": ["The rim run occupies the back line and creates the corner three", "A drag screen in semi-transition catches the defence in cross-matchups"] },
+      "edges": {
+        "appliesIn": ["sit:transition", "sit:early-offense"],
+        "requires": ["arch:pick-and-roll-initiator", "arch:rim-running-big"],
+        "produces": ["outcome:rim-attempt", "outcome:corner-three"],
+        "hasCounter": ["counter:transition-defence-vs-push"]
+      }
+    },
+
+    {
+      "id": "scheme:man-to-man",
+      "type": "DefensiveScheme",
+      "label": "Man-to-Man",
+      "definition": "Every defender is responsible for one opponent, plus a defined help position (nail, weak-side low man, back line).",
+      "props": { "key": ["On-ball: contain and direct the ball", "Off-ball: be in the help position on the flight of the pass, not after it", "Every drive is a five-man problem, not a one-man problem"] },
+      "edges": { "hasCoverage": "coverage:at-the-level", "appliesIn": ["sit:half-court", "sit:ato"] }
+    },
+    {
+      "id": "scheme:zone-2-3",
+      "type": "DefensiveScheme",
+      "label": "Zone 2-3",
+      "definition": "Two defenders across the top and three along the bottom. A paint-protecting shell that concedes the above-the-break three and dares the offence to beat it with passing, patience and rebounding.",
+      "props": {
+        "key": [
+          "Move on the flight of the ball: the shell slides with every pass",
+          "Touch the midline: weak-side back-line defenders must be in help position",
+          "Bump cutters as they pass through your area, then give them up",
+          "The top two must 'match' to the ball and take away the middle",
+          "Rebounding is the zone's weak point: everyone must find a body"
+        ]
+      },
+      "edges": {
+        "hasFormation": "form:two-three-shell",
+        "appliesIn": ["sit:half-court", "sit:blob", "sit:ato"],
+        "requires": ["arch:rim-protector", "arch:help-side-roamer"],
+        "hasCounter": ["counter:high-post-vs-2-3", "counter:overload-vs-2-3", "counter:ball-reversal-vs-2-3", "counter:offensive-glass-vs-2-3", "counter:transition-vs-2-3"]
+      }
+    },
+    {
+      "id": "scheme:zone-3-2",
+      "type": "DefensiveScheme",
+      "label": "Zone 3-2",
+      "definition": "Three defenders across the top, two on the back line; built to bother perimeter shooters and to generate turnovers on the wings.",
+      "props": { "key": ["Takes away the above-the-break three", "Gives up the corners and the offensive glass: the back two must be elite rebounders"] },
+      "edges": {
+        "hasFormation": "form:three-two-shell",
+        "appliesIn": ["sit:half-court"],
+        "requires": ["arch:perimeter-stopper", "arch:rim-protector"]
+      }
+    },
+    {
+      "id": "scheme:matchup-zone",
+      "type": "DefensiveScheme",
+      "label": "Matchup Zone",
+      "definition": "A hybrid that begins in a zone shell but picks up men as they enter each defender's area, combining zone protection with man accountability on the glass.",
+      "props": { "key": ["Solves the zone's rebounding problem", "Requires five defenders who can communicate and pass off cutters"] },
+      "edges": { "appliesIn": ["sit:half-court", "sit:ato"], "requires": ["arch:switchable-defender"] }
+    },
+    {
+      "id": "scheme:pack-line",
+      "type": "DefensiveScheme",
+      "label": "Pack Line",
+      "definition": "A gap-control man-to-man: off-ball defenders sink to a 'line' inside the arc and stunt at the ball, conceding nothing at the rim and forcing tough twos.",
+      "props": { "key": ["No middle: every drive is funnelled to a crowded baseline", "Vulnerable to a hot shooting night from the arc"] },
+      "edges": { "appliesIn": ["sit:half-court"], "hasCoverage": "coverage:drop" }
+    },
+    {
+      "id": "scheme:switch-all",
+      "type": "DefensiveScheme",
+      "label": "Switch-All (Switch Everything)",
+      "definition": "Every screen is switched, removing the pass-out advantage and betting on five players who can hold up in any matchup.",
+      "props": { "key": ["Takes away the pick-and-roll's first pass and the shooter's window", "Concedes the mismatch: it must be answered with scram switches and physical post defence"] },
+      "edges": {
+        "hasCoverage": "coverage:switch",
+        "appliesIn": ["sit:half-court", "sit:late-clock", "sit:clutch"],
+        "requires": ["arch:switchable-defender"],
+        "hasCounter": ["counter:post-up-vs-switch", "counter:slip-vs-switch", "counter:step-back-vs-switch"]
+      }
+    },
+    {
+      "id": "scheme:full-court-press",
+      "type": "DefensiveScheme",
+      "label": "Full-Court Press",
+      "definition": "Applying pressure the length of the floor to burn the eight-second count, force turnovers and dictate tempo.",
+      "props": { "key": ["The press is a tempo weapon, not a steal machine: make them use clock", "Never let the ball go middle against a trap"] },
+      "edges": {
+        "hasFormation": "form:one-two-one-one",
+        "appliesIn": ["sit:press", "sit:late-clock"],
+        "requires": ["arch:aggressive-blitzer", "arch:perimeter-stopper"],
+        "hasCounter": ["counter:middle-release-vs-press"]
+      }
+    },
+
+    { "id": "outcome:rim-attempt", "type": "Outcome", "label": "Rim attempt", "definition": "A shot at or within a step of the basket, the most efficient shot in the game." },
+    { "id": "outcome:lob-dunk", "type": "Outcome", "label": "Lob dunk", "definition": "The highest-percentage finish, produced when the roll man beats the defence to the rim." },
+    { "id": "outcome:corner-three", "type": "Outcome", "label": "Corner three", "definition": "The shortest and most efficient three, the classic product of help being forced to the ball." },
+    { "id": "outcome:above-break-three", "type": "Outcome", "label": "Above-the-break three", "definition": "A three from the wing or the top, produced by relocation, kick-outs and ball reversals." },
+    { "id": "outcome:open-midrange", "type": "Outcome", "label": "Open mid-range", "definition": "A clean look from the elbow or short corner: the shot a good defence is willing to concede." },
+    { "id": "outcome:mismatch-created", "type": "Outcome", "label": "Mismatch created", "definition": "A favourable one-on-one (big on small, fast on slow) created by a switch or a cross-match." },
+    { "id": "outcome:foul-drawn", "type": "Outcome", "label": "Foul drawn", "definition": "Contact created by an advantage, resulting in free throws or penalty situation." },
+    { "id": "outcome:turnover-forced", "type": "Outcome", "label": "Turnover forced", "definition": "The defence takes the ball away, usually through pressure, traps or a deflection." },
+    { "id": "outcome:offensive-rebound", "type": "Outcome", "label": "Offensive rebound", "definition": "The possession is extended by crashing the glass against a defence that is out of position to box out." },
+    { "id": "outcome:deflection", "type": "Outcome", "label": "Deflection", "definition": "A ball touched in a passing lane, disrupting the timing of the offence." },
+
+    {
+      "id": "counter:switch-vs-pnr",
+      "type": "Counter",
+      "label": "Switch the ball screen",
+      "definition": "Switch everything off the ball screen so the pass to the roller disappears and the action becomes an isolation.",
+      "props": {
+        "answers": "Pick and roll",
+        "vulnerability": "The mismatch and the slip",
+        "rationale": "Switching removes the two-on-two advantage by definition: there is no separation to pass into.",
+        "effectiveness": "high",
+        "key": ["Requires five switchable defenders, not two", "The scram switch must be pre-called to hide the weakest defender"]
+      },
+      "edges": { "answers": "scheme:pick-and-roll", "exploits": ["atype:pocket-pass"] }
+    },
+    {
+      "id": "counter:blitz-vs-pnr",
+      "type": "Counter",
+      "label": "Blitz the ball handler",
+      "definition": "Send both defenders at the ball to force it out of the initiator's hands and invite a turnover.",
+      "props": {
+        "answers": "Pick and roll",
+        "vulnerability": "The 4-on-3 behind the trap, especially a short-roll passer or a hub big",
+        "rationale": "Two on the ball is only safe if the offence cannot pass on time; the counter is a bet on their processing speed.",
+        "effectiveness": "medium",
+        "key": ["The back line must rotate 'next man up' on the same beat as the trap", "Never blitz a short-roll passer without help on the roll"]
+      },
+      "edges": { "answers": "scheme:pick-and-roll", "exploits": ["atype:pocket-pass"] }
+    },
+    {
+      "id": "counter:ice-vs-pnr",
+      "type": "Counter",
+      "label": "ICE the side ball screen",
+      "definition": "Force the ball handler to the baseline so the sideline becomes an extra defender and the pull-up three disappears.",
+      "props": {
+        "answers": "Pick and roll",
+        "vulnerability": "The reject to the middle and the subsequent ball reversal",
+        "rationale": "Taking away the middle takes away the pull-up, the pocket pass and the skip pass in one move.",
+        "effectiveness": "high",
+        "key": ["Only viable on the side, never on a middle ball screen", "The weak side must be loaded for the kick-out"]
+      },
+      "edges": { "answers": "scheme:pick-and-roll", "exploits": ["atype:use-screen"] }
+    },
+    {
+      "id": "counter:short-roll-vs-blitz",
+      "type": "Counter",
+      "label": "Short roll against the blitz",
+      "definition": "Against a trap, the screener catches at the elbow and plays 4-on-3: shoot it, or hit the corner and the weak-side lift.",
+      "props": {
+        "answers": "Blitz",
+        "vulnerability": "Defenders committing two to the ball leave three defenders for four players",
+        "rationale": "The blitz creates a numerical disadvantage behind it; a decision-maker at the elbow converts it into an open shot every time.",
+        "effectiveness": "high",
+        "key": ["Catch on the move, get your feet to the rim", "The read is: is the corner's defender helping? If yes, skip it; if no, shoot or drive"]
+      },
+      "edges": { "answers": "scheme:pick-and-roll", "exploits": ["coverage:blitz"], "counteredBy": "coverage:blitz" }
+    },
+    {
+      "id": "counter:pull-up-vs-drop",
+      "type": "Counter",
+      "label": "Pull-up three against drop coverage",
+      "definition": "When the big sinks, the ball handler simply shoots it off the dribble before help can arrive.",
+      "props": {
+        "answers": "Drop coverage",
+        "vulnerability": "The drop concedes the shot to protect the rim",
+        "rationale": "A defence that refuses to contest the ball handler has already lost the shot-quality battle if he can shoot.",
+        "effectiveness": "high",
+        "key": ["Screen must be set high enough to give the handler a clean window", "Get into the shot before the big's shadow, not after"]
+      },
+      "edges": { "answers": "scheme:pick-and-roll", "exploits": ["coverage:drop"], "counteredBy": "coverage:drop" }
+    },
+    {
+      "id": "counter:pop-vs-drop",
+      "type": "Counter",
+      "label": "Pop the screen instead of rolling",
+      "definition": "A stretch big pops to the arc after screening, dragging the drop big out of the paint and emptying the lane.",
+      "props": {
+        "answers": "Drop coverage",
+        "vulnerability": "The drop big cannot be at the rim and on the popper at the same time",
+        "rationale": "It converts the defence's strength (rim protection) into its weakness (closeout defence).",
+        "effectiveness": "high",
+        "key": ["The pop must be to a spot the big is uncomfortable contesting", "The ball handler must be willing to hit the popper, not just hunt his own shot"]
+      },
+      "edges": { "answers": "scheme:pick-and-roll", "exploits": ["coverage:drop"], "counteredBy": "coverage:drop" }
+    },
+    {
+      "id": "counter:slip-vs-switch",
+      "type": "Counter",
+      "label": "Slip the screen against a switch",
+      "definition": "When the defence jumps the switch, the screener abandons the screen early and cuts to the rim before his new defender is set.",
+      "props": {
+        "answers": "Switch coverage",
+        "vulnerability": "A pre-emptive switch leaves nobody accountable for the screener for a beat",
+        "rationale": "The switch is a bet on being able to pass off the action; a slip makes the pass-off happen one frame too late.",
+        "effectiveness": "medium",
+        "key": ["The slip must be sold as a screen until the last instant", "Timing: slip when the defender's head turns"]
+      },
+      "edges": { "answers": "scheme:switch-all", "exploits": ["coverage:switch"], "counteredBy": "coverage:switch" }
+    },
+    {
+      "id": "counter:post-up-vs-switch",
+      "type": "Counter",
+      "label": "Post the mismatch",
+      "definition": "After a switch, get the ball to the mismatch on the block immediately, before the defence can scram out of it.",
+      "props": {
+        "answers": "Switch coverage",
+        "vulnerability": "Every switch creates a mismatch somewhere on the floor",
+        "rationale": "A guard defending a big on the block is a free basket or a double-team that opens the arc.",
+        "effectiveness": "high",
+        "key": ["Attack before the scram switch arrives", "If the double comes, the corner and the weak-side lift are open"]
+      },
+      "edges": { "answers": "scheme:switch-all", "exploits": ["coverage:switch"], "counteredBy": "coverage:switch" }
+    },
+    {
+      "id": "counter:step-back-vs-switch",
+      "type": "Counter",
+      "label": "Step-back isolation against a switch",
+      "definition": "When the switch takes away the pass, the initiator separates with a step-back rather than a screen.",
+      "props": {
+        "answers": "Switch coverage",
+        "vulnerability": "A slow big switched onto a guard in space is a shot-quality problem",
+        "rationale": "If the defence will not help, the offence does not need to move the ball: it needs one favourable one-on-one.",
+        "effectiveness": "medium",
+        "key": ["Best used late in the clock, when the defence cannot rotate out of it", "Clear the side so the help defender cannot stunt"]
+      },
+      "edges": { "answers": "scheme:switch-all", "exploits": ["coverage:switch"], "counteredBy": "coverage:switch" }
+    },
+    {
+      "id": "counter:switch-vs-motion",
+      "type": "Counter",
+      "label": "Switch every off-ball screen",
+      "definition": "Against motion offence, deny the cutting lanes by switching all off-ball screens, turning the offence into five isolations.",
+      "props": {
+        "answers": "Motion offence",
+        "vulnerability": "Switching off-ball creates mismatches and slows the defensive rotations",
+        "rationale": "Cutting only works against defenders who are chasing; switching removes the chase.",
+        "effectiveness": "medium",
+        "key": ["Communication is the cost: every switch is a verbal exchange", "Offensive rebounding punishes cross-matched defences"]
+      },
+      "edges": { "answers": "scheme:motion-offense", "exploits": ["atype:down-screen"] }
+    },
+    {
+      "id": "counter:physicality-vs-motion",
+      "type": "Counter",
+      "label": "Physicality and nail help against motion",
+      "definition": "Disrupt timing by denying the first pass and filling the cutting lanes with bodies, within the freedom-of-movement rule.",
+      "props": {
+        "answers": "Motion offence",
+        "vulnerability": "Over-aggression becomes a foul and opens the backdoor",
+        "rationale": "Motion depends on timing: a cut that arrives half a second late is not a cut.",
+        "effectiveness": "medium",
+        "key": ["Get through, do not hold: bumps must be momentary", "Fill the nail so the basket cut has to end in a contested finish"]
+      },
+      "edges": { "answers": "scheme:motion-offense", "exploits": ["atype:basket-cut"], "constrainedBy": ["rule:freedom-of-movement"] }
+    },
+    {
+      "id": "counter:high-post-vs-2-3",
+      "type": "Counter",
+      "label": "Occupy the high post against the 2-3",
+      "definition": "Station a player at the free-throw line, the 'hole' of the 2-3 zone, where a catch splits the bottom three and forces a choice between the rim and the corners.",
+      "props": {
+        "answers": "Zone 2-3",
+        "vulnerability": "The free-throw line is the geometric hole of the 2-3 shell",
+        "rationale": "A catch at the middle of the zone makes the two bottom corner defenders choose, and either choice is wrong.",
+        "effectiveness": "high",
+        "key": ["The player there must be a passer, not just a scorer", "Fill both corners and the short corners so the help cannot cheat"]
+      },
+      "edges": { "answers": "scheme:zone-2-3", "exploits": ["zone:high-post"], "counteredBy": "scheme:zone-2-3" }
+    },
+    {
+      "id": "counter:overload-vs-2-3",
+      "type": "Counter",
+      "label": "Overload one side of the 2-3",
+      "definition": "Put three or four players on one side of the floor so the zone has more attackers than defenders on that side, then skip to the vacated corner.",
+      "props": {
+        "answers": "Zone 2-3",
+        "vulnerability": "A zone must allocate one defender per area; overloading breaks the allocation",
+        "rationale": "The zone counts heads, not matchups: put more heads in one area than it can cover.",
+        "effectiveness": "high",
+        "key": ["Overload the strong side, then reverse to the empty side", "The skip pass is the shot, not the drive"]
+      },
+      "edges": { "answers": "scheme:zone-2-3", "exploits": ["zone:corner-three-left", "zone:corner-three-right"], "counteredBy": "scheme:zone-2-3" }
+    },
+    {
+      "id": "counter:ball-reversal-vs-2-3",
+      "type": "Counter",
+      "label": "Quick ball reversal against the 2-3",
+      "definition": "Swing the ball top-to-wing-to-top-to-wing quickly so the shell has to shift twice in one possession; the second shift is always late.",
+      "props": {
+        "answers": "Zone 2-3",
+        "vulnerability": "A zone moves on the flight of the ball; two quick reversals beat the rotation",
+        "rationale": "Zone defence is a reaction to the ball; make it react twice faster than it can.",
+        "effectiveness": "high",
+        "key": ["The reversal must be in the air before the first rotation settles", "Attack the 'seams', not the occupied areas"]
+      },
+      "edges": { "answers": "scheme:zone-2-3", "exploits": ["zone:wing-three-left", "zone:wing-three-right", "zone:short-corner-left"], "counteredBy": "scheme:zone-2-3" }
+    },
+    {
+      "id": "counter:offensive-glass-vs-2-3",
+      "type": "Counter",
+      "label": "Crash the offensive glass against the 2-3",
+      "definition": "Send two or three players to the offensive boards: zone defenders guard areas, not men, so they are often out of position to box out.",
+      "props": {
+        "answers": "Zone 2-3",
+        "vulnerability": "Zone defenders are responsible for space, not for a body to box out",
+        "rationale": "The structural weakness of any pure zone is finishing the possession with a rebound.",
+        "effectiveness": "high",
+        "key": ["Crash from the perimeter, where the zone has no one to block out", "Keep one player back for transition defence"]
+      },
+      "edges": { "answers": "scheme:zone-2-3", "exploits": ["zone:paint", "zone:restricted-area"], "counteredBy": "scheme:zone-2-3" }
+    },
+    {
+      "id": "counter:transition-vs-2-3",
+      "type": "Counter",
+      "label": "Run before the 2-3 can set",
+      "definition": "Push the ball in transition so the zone never gets into its shell; a half-set zone is just five players in the wrong places.",
+      "props": {
+        "answers": "Zone 2-3",
+        "vulnerability": "A zone needs time and a dead ball to organise",
+        "rationale": "The best zone offence is a made basket or a stopped ball: deny them the chance to set up.",
+        "effectiveness": "high",
+        "key": ["Rim run to occupy the back line, then the trailing corner three", "Early drag screen catches the zone in a cross-match"]
+      },
+      "edges": { "answers": "scheme:zone-2-3", "exploits": ["zone:backcourt"], "counteredBy": "scheme:zone-2-3" }
+    },
+    {
+      "id": "counter:middle-release-vs-press",
+      "type": "Counter",
+      "label": "Middle release and advance pass against the press",
+      "definition": "Get the ball to the middle of the floor, then over the top: the press dies when the ball beats the trap line.",
+      "props": {
+        "answers": "Full-court press",
+        "vulnerability": "A trap leaves one player open by definition",
+        "rationale": "Two defenders on the ball means a team-mate is free; find him before the five-second count bites.",
+        "effectiveness": "high",
+        "key": ["Sideline safety valve first, middle release second", "Do not dribble into the trap: pass out of it before it forms"]
+      },
+      "edges": { "answers": "scheme:full-court-press", "exploits": ["zone:backcourt"], "counteredBy": "scheme:full-court-press" }
+    },
+    {
+      "id": "counter:transition-defence-vs-push",
+      "type": "Counter",
+      "label": "Sprint back and build a wall",
+      "definition": "Against early offence, send three players level with the ball to protect the rim first, then find shooters.",
+      "props": {
+        "answers": "Early offence",
+        "vulnerability": "Transitions create numbers if the defence retreats behind the ball",
+        "rationale": "Protect the rim first and concede nothing easy: a contested three in semi-transition is a win for the defence.",
+        "effectiveness": "high",
+        "key": ["Never retreat behind the ball: get level with it", "The deepest defender takes the rim runner; the others find the arc"]
+      },
+      "edges": { "answers": "scheme:early-offense", "exploits": ["atype:rim-run"], "counteredBy": "scheme:early-offense" }
+    }
+  ]
+}

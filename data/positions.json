@@ -1,0 +1,455 @@
+{
+  "id": "dataset:positions",
+  "label": "Positions, functional roles, archetypes and skills",
+  "definition": "The agent layer of the ontology. Nominal positions (1-5) are kept separate from functional roles (what a player actually does in a scheme) and from archetypes (the reproducible skill bundle that makes a player suited to a role).",
+  "nodes": [
+    { "id": "pgroup:guard", "type": "PositionGroup", "label": "Guard", "definition": "Perimeter ball-handling group (1-2). Initiates offence, defends the ball." },
+    { "id": "pgroup:wing", "type": "PositionGroup", "label": "Wing", "definition": "Perimeter/forward hybrid group (2-3). Connect the arc and the paint, defends the best perimeter scorer." },
+    { "id": "pgroup:big", "type": "PositionGroup", "label": "Big", "definition": "Frontcourt group (4-5). Screens, rolls, protects the rim, controls the glass." },
+
+    {
+      "id": "pos:point-guard",
+      "type": "Position",
+      "label": "Point Guard",
+      "abbreviation": "PG",
+      "definition": "The nominal '1'. Traditionally the primary initiator: brings the ball up, calls the action, sets the table.",
+      "props": {
+        "aliases": ["the 1", "floor general"],
+        "key": [
+          "Sets the tempo and the first call of the possession",
+          "In modern systems the '1' is a label, not a licence: any player may initiate"
+        ]
+      },
+      "edges": {
+        "belongsToGroup": "pgroup:guard",
+        "hasRole": ["role:ball-handler", "role:initiator"],
+        "hasArchetype": ["arch:pick-and-roll-initiator", "arch:pull-up-shooter"]
+      }
+    },
+    {
+      "id": "pos:shooting-guard",
+      "type": "Position",
+      "label": "Shooting Guard",
+      "abbreviation": "SG",
+      "definition": "The nominal '2'. Historically the scoring guard; today usually a movement shooter or a secondary creator.",
+      "props": { "aliases": ["the 2", "off-guard"] },
+      "edges": {
+        "belongsToGroup": "pgroup:guard",
+        "hasRole": ["role:off-ball-mover", "role:spot-up-shooter", "role:secondary-creator"],
+        "hasArchetype": ["arch:off-ball-sharpshooter", "arch:secondary-creator"]
+      }
+    },
+    {
+      "id": "pos:small-forward",
+      "type": "Position",
+      "label": "Small Forward",
+      "abbreviation": "SF",
+      "definition": "The nominal '3'. The most interchangeable position: must be able to shoot, switch on defence and attack a closeout.",
+      "props": { "aliases": ["the 3", "the wing"] },
+      "edges": {
+        "belongsToGroup": "pgroup:wing",
+        "hasRole": ["role:spot-up-shooter", "role:connector", "role:perimeter-stopper"],
+        "hasArchetype": ["arch:three-and-d-wing", "arch:slasher"]
+      }
+    },
+    {
+      "id": "pos:power-forward",
+      "type": "Position",
+      "label": "Power Forward",
+      "abbreviation": "PF",
+      "definition": "The nominal '4'. The modern 'stretch four' spaces the floor; the classic four screened, rebounded and scored inside.",
+      "props": { "aliases": ["the 4", "combo forward"], "note": "The most archetype-volatile position in the modern game: stretch four vs small-ball four changes the whole scheme." },
+      "edges": {
+        "belongsToGroup": "pgroup:big",
+        "hasRole": ["role:screener", "role:stretch-big", "role:switchable-defender"],
+        "hasArchetype": ["arch:spacing-big", "arch:switchable-defender", "arch:rim-running-big"]
+      }
+    },
+    {
+      "id": "pos:center",
+      "type": "Position",
+      "label": "Center",
+      "abbreviation": "C",
+      "definition": "The nominal '5'. Anchors the rim defensively and screens/rolls offensively; in hub systems he is the primary passer.",
+      "props": { "aliases": ["the 5", "the big", "the anchor"] },
+      "edges": {
+        "belongsToGroup": "pgroup:big",
+        "hasRole": ["role:screener", "role:roll-man", "role:rim-protector", "role:hub"],
+        "hasArchetype": ["arch:rim-protector", "arch:rim-running-big", "arch:hub-playmaker", "arch:roll-and-pop-big"]
+      }
+    },
+
+    {
+      "id": "role:initiator",
+      "type": "Role",
+      "label": "Initiator",
+      "definition": "The player who starts the offence: makes the first call, gets the ball to the action.",
+      "edges": { "requires": ["skill:ball-handling", "skill:passing-vision"] }
+    },
+    {
+      "id": "role:ball-handler",
+      "type": "Role",
+      "label": "Ball Handler",
+      "definition": "The player with the ball in a ball-screen or dribble-hand-off action. Reads the coverage and chooses the branch.",
+      "edges": { "requires": ["skill:ball-handling", "skill:screen-navigation", "skill:passing-vision"] }
+    },
+    {
+      "id": "role:screener",
+      "type": "Role",
+      "label": "Screener",
+      "definition": "The player who sets the screen: on-ball (ball screen), or off-ball (down, flare, pin, stagger).",
+      "edges": { "requires": ["skill:screen-setting"] }
+    },
+    {
+      "id": "role:roll-man",
+      "type": "Role",
+      "label": "Roll Man",
+      "definition": "The screener after the screen: attacks the rim (roll), floats to the elbow (short roll) or spaces to the arc (pop).",
+      "edges": { "requires": ["skill:rim-finishing"] }
+    },
+    {
+      "id": "role:pop-man",
+      "type": "Role",
+      "label": "Pop Man",
+      "definition": "A screener whose second action is to space beyond the arc instead of rolling, dragging the rim protector out of the paint.",
+      "edges": { "requires": ["skill:three-point-shooting"] }
+    },
+    {
+      "id": "role:hub",
+      "type": "Role",
+      "label": "Hub",
+      "definition": "The player stationed at the elbow, high post or short roll who receives against a rotating defence and re-distributes.",
+      "edges": { "requires": ["skill:short-roll-decisions", "skill:passing-vision"] }
+    },
+    {
+      "id": "role:connector",
+      "type": "Role",
+      "label": "Connector",
+      "definition": "The secondary creator who turns a first advantage into a second one: dribble hand-offs, quick swings, closeout attacks.",
+      "edges": { "requires": ["skill:passing-vision", "skill:ball-handling"] }
+    },
+    {
+      "id": "role:secondary-creator",
+      "type": "Role",
+      "label": "Secondary Creator",
+      "definition": "The second ball-handling option: runs the second action when the first is taken away, and punishes a defence that loads up on the primary creator.",
+      "edges": { "requires": ["skill:ball-handling", "skill:passing-vision"] }
+    },
+    {
+      "id": "role:spot-up-shooter",
+      "type": "Role",
+      "label": "Spot-Up Shooter",
+      "definition": "A floor spacer who occupies a defined spot (usually a corner) and punishes help with a catch-and-shoot three.",
+      "edges": { "requires": ["skill:catch-and-shoot", "skill:three-point-shooting"] }
+    },
+    {
+      "id": "role:off-ball-mover",
+      "type": "Role",
+      "label": "Off-Ball Mover",
+      "definition": "A player who relocates, cuts and screens without the ball to stress the defence's attention and rules.",
+      "edges": { "requires": ["skill:off-ball-movement"] }
+    },
+    {
+      "id": "role:stretch-big",
+      "type": "Role",
+      "label": "Stretch Big",
+      "definition": "A frontcourt player who must be guarded beyond the arc, which removes his defender from the rim.",
+      "edges": { "requires": ["skill:three-point-shooting"] }
+    },
+    {
+      "id": "role:rim-runner",
+      "type": "Role",
+      "label": "Rim Runner",
+      "definition": "The player who sprints the floor in transition to pressure the rim before the defence can set.",
+      "edges": { "requires": ["skill:rim-finishing"] }
+    },
+    {
+      "id": "role:on-ball-defender",
+      "type": "Role",
+      "label": "On-Ball Defender",
+      "definition": "Point-of-attack defender: contains the ball, navigates screens, executes the coverage.",
+      "edges": { "requires": ["skill:screen-navigation", "skill:lateral-quickness"] }
+    },
+    {
+      "id": "role:help-defender",
+      "type": "Role",
+      "label": "Help Defender (Nail / Low Man)",
+      "definition": "The off-ball defender who occupies the help position: the nail (free-throw line) on the ball side or the weak-side low man on the split line.",
+      "edges": { "requires": ["skill:help-side-timing"] }
+    },
+    {
+      "id": "role:rim-protector",
+      "type": "Role",
+      "label": "Rim Protector",
+      "definition": "The last line: contests at the rim, goes vertical, and deters penetration simply by being there.",
+      "edges": { "requires": ["skill:length", "skill:help-side-timing"] }
+    },
+    {
+      "id": "role:perimeter-stopper",
+      "type": "Role",
+      "label": "Perimeter Stopper",
+      "definition": "The defender assigned to the opponent's best perimeter scorer across positions.",
+      "edges": { "requires": ["skill:lateral-quickness"] }
+    },
+    {
+      "id": "role:switchable-defender",
+      "type": "Role",
+      "label": "Switchable Defender",
+      "definition": "A defender who can hold up after a switch against both bigger and smaller players, enabling switch-all schemes.",
+      "edges": { "requires": ["skill:switch-versatility", "skill:lateral-quickness"] }
+    },
+    {
+      "id": "role:rebounder",
+      "type": "Role",
+      "label": "Rebounder / Boxer-Out",
+      "definition": "Responsible for ending the possession on the defensive glass: find a body, then go get the ball.",
+      "edges": { "requires": ["skill:rebounding"] }
+    },
+
+    { "id": "skill:ball-handling", "type": "Skill", "label": "Ball handling", "definition": "Ability to advance, protect and manipulate the ball against pressure." },
+    { "id": "skill:passing-vision", "type": "Skill", "label": "Passing vision", "definition": "Ability to read a rotating defence and deliver the ball on time and on target." },
+    { "id": "skill:short-roll-decisions", "type": "Skill", "label": "Short-roll decision making", "definition": "Processing a 4-on-3 from the elbow: shoot, pass or attack." },
+    { "id": "skill:three-point-shooting", "type": "Skill", "label": "Three-point shooting", "definition": "Range and accuracy beyond the arc, off the catch or off the dribble." },
+    { "id": "skill:catch-and-shoot", "type": "Skill", "label": "Catch-and-shoot", "definition": "Footwork and release speed to shoot immediately on the catch." },
+    { "id": "skill:rim-finishing", "type": "Skill", "label": "Rim finishing", "definition": "Converting at the rim through contact, with either hand, off either foot." },
+    { "id": "skill:vertical-spacing", "type": "Skill", "label": "Vertical spacing", "definition": "Lob radius and leaping threat that turns a roll into a rim attempt." },
+    { "id": "skill:screen-setting", "type": "Skill", "label": "Screen setting", "definition": "Angle, timing, legality and physicality of screening." },
+    { "id": "skill:off-ball-movement", "type": "Skill", "label": "Off-ball movement", "definition": "Cutting, relocating and screening away to create without the ball." },
+    { "id": "skill:post-footwork", "type": "Skill", "label": "Post footwork", "definition": "Sealing, duck-ins, pivots and counters from the block." },
+    { "id": "skill:screen-navigation", "type": "Skill", "label": "Screen navigation", "definition": "Defensive ability to get over, under or through screens and stay attached." },
+    { "id": "skill:lateral-quickness", "type": "Skill", "label": "Lateral quickness", "definition": "Ability to stay in front of the ball and to close out under control." },
+    { "id": "skill:switch-versatility", "type": "Skill", "label": "Switch versatility", "definition": "Defending multiple positions credibly after a switch." },
+    { "id": "skill:help-side-timing", "type": "Skill", "label": "Help-side timing", "definition": "Arriving in the help position on the pass, not after it, and recovering in time." },
+    { "id": "skill:length", "type": "Skill", "label": "Length", "definition": "Wingspan and standing reach that shrink passing lanes and contest shots." },
+    { "id": "skill:rebounding", "type": "Skill", "label": "Rebounding", "definition": "Boxing out, tracking the ball and finishing the possession." },
+
+    {
+      "id": "arch:pick-and-roll-initiator",
+      "type": "Archetype",
+      "label": "Pick-and-Roll Initiator (Helmsman)",
+      "definition": "High-usage ball-screen operator who scores and passes out of the action and dictates the coverage the defence must choose.",
+      "props": { "aliases": ["helmsman", "primary creator"], "exemplar": "Luka Doncic", "illustrative": true },
+      "edges": {
+        "requires": ["skill:ball-handling", "skill:passing-vision", "skill:screen-navigation"],
+        "typicalPosition": ["pos:point-guard", "pos:shooting-guard"],
+        "strongAgainst": ["arch:drop-big"],
+        "vulnerableTo": ["arch:switchable-defender", "arch:perimeter-stopper"]
+      }
+    },
+    {
+      "id": "arch:pull-up-shooter",
+      "type": "Archetype",
+      "label": "Pull-Up Shooter",
+      "definition": "A ball handler who can stop on a dime and shoot off the dribble over a screen, punishing any coverage that goes under or drops.",
+      "props": { "exemplar": "Stephen Curry", "illustrative": true },
+      "edges": {
+        "requires": ["skill:three-point-shooting", "skill:ball-handling"],
+        "typicalPosition": ["pos:point-guard", "pos:shooting-guard"],
+        "strongAgainst": ["arch:drop-big", "arch:rim-protector"]
+      }
+    },
+    {
+      "id": "arch:rim-running-big",
+      "type": "Archetype",
+      "label": "Rim-Running Big",
+      "definition": "Screens, then sprints to the rim with a wide catch radius; his value is the vertical pressure he puts on the paint even when he never touches the ball.",
+      "props": { "exemplar": "Clint Capela", "illustrative": true },
+      "edges": {
+        "requires": ["skill:screen-setting", "skill:rim-finishing", "skill:vertical-spacing"],
+        "typicalPosition": ["pos:center", "pos:power-forward"],
+        "strongAgainst": ["arch:help-side-roamer"],
+        "vulnerableTo": ["arch:switchable-defender"]
+      }
+    },
+    {
+      "id": "arch:roll-and-pop-big",
+      "type": "Archetype",
+      "label": "Roll-and-Pop Big (Stretch 5)",
+      "definition": "A screener who pops to the arc after screening, dragging the rim protector away from the basket and emptying the paint for drivers.",
+      "props": { "exemplar": "Brook Lopez", "illustrative": true },
+      "edges": {
+        "requires": ["skill:three-point-shooting", "skill:screen-setting"],
+        "typicalPosition": ["pos:center"],
+        "strongAgainst": ["arch:rim-protector", "arch:drop-big"],
+        "vulnerableTo": ["arch:switchable-defender"]
+      }
+    },
+    {
+      "id": "arch:short-roll-passer",
+      "type": "Archetype",
+      "label": "Short-Roll Passer",
+      "definition": "Catches the ball at the elbow against a collapsed defence and plays 4-on-3: the antidote to blitz and trap coverages.",
+      "props": { "exemplar": "Draymond Green", "illustrative": true },
+      "edges": {
+        "requires": ["skill:short-roll-decisions", "skill:passing-vision"],
+        "typicalPosition": ["pos:power-forward", "pos:center"],
+        "strongAgainst": ["arch:aggressive-blitzer"]
+      }
+    },
+    {
+      "id": "arch:hub-playmaker",
+      "type": "Archetype",
+      "label": "Hub Playmaker",
+      "definition": "A big who receives at the elbow or high post and runs the offence from there, reading the back line of the defence and delivering to cutters and shooters.",
+      "props": { "exemplar": "Nikola Jokic", "illustrative": true },
+      "edges": {
+        "requires": ["skill:passing-vision", "skill:post-footwork", "skill:short-roll-decisions"],
+        "typicalPosition": ["pos:center", "pos:power-forward"],
+        "strongAgainst": ["arch:rim-protector"]
+      }
+    },
+    {
+      "id": "arch:spacing-big",
+      "type": "Archetype",
+      "label": "Spacing Big (Stretch 4)",
+      "definition": "A frontcourt player whose shooting forces a rim protector to defend on the perimeter, opening the lane and the roll.",
+      "props": { "exemplar": "Dirk Nowitzki", "illustrative": true },
+      "edges": {
+        "requires": ["skill:three-point-shooting", "skill:catch-and-shoot"],
+        "typicalPosition": ["pos:power-forward"],
+        "strongAgainst": ["arch:rim-protector", "arch:drop-big"],
+        "vulnerableTo": ["arch:perimeter-stopper"]
+      }
+    },
+    {
+      "id": "arch:off-ball-sharpshooter",
+      "type": "Archetype",
+      "label": "Off-Ball Sharpshooter",
+      "definition": "A movement shooter who runs the defence through screens, relocates to the corner, and punishes any late rotation.",
+      "props": { "exemplar": "Klay Thompson", "illustrative": true },
+      "edges": {
+        "requires": ["skill:off-ball-movement", "skill:catch-and-shoot", "skill:three-point-shooting"],
+        "typicalPosition": ["pos:shooting-guard", "pos:small-forward"],
+        "strongAgainst": ["arch:help-side-roamer"]
+      }
+    },
+    {
+      "id": "arch:three-and-d-wing",
+      "type": "Archetype",
+      "label": "3-and-D Wing",
+      "definition": "A wing who can guard the best perimeter player and still space the floor in the corner; the connective tissue of modern lineups.",
+      "props": { "exemplar": "Kawhi Leonard", "illustrative": true },
+      "edges": {
+        "requires": ["skill:lateral-quickness", "skill:catch-and-shoot", "skill:switch-versatility"],
+        "typicalPosition": ["pos:small-forward", "pos:shooting-guard"]
+      }
+    },
+    {
+      "id": "arch:slasher",
+      "type": "Archetype",
+      "label": "Slasher",
+      "definition": "An attacker who beats a closeout and gets to the rim, forcing the defence to collapse and generating kick-outs.",
+      "props": { "exemplar": "Ja Morant", "illustrative": true },
+      "edges": {
+        "requires": ["skill:rim-finishing", "skill:ball-handling"],
+        "typicalPosition": ["pos:small-forward", "pos:shooting-guard"],
+        "strongAgainst": ["arch:off-ball-sharpshooter"],
+        "vulnerableTo": ["arch:rim-protector"]
+      }
+    },
+    {
+      "id": "arch:secondary-creator",
+      "type": "Archetype",
+      "label": "Secondary Creator",
+      "definition": "A guard or wing who can run a second action off the primary advantage: hand-offs, pick-and-rolls and closeout attacks.",
+      "props": { "exemplar": "Jrue Holiday", "illustrative": true },
+      "edges": {
+        "requires": ["skill:ball-handling", "skill:passing-vision"],
+        "typicalPosition": ["pos:shooting-guard", "pos:small-forward"]
+      }
+    },
+    {
+      "id": "arch:post-scorer",
+      "type": "Archetype",
+      "label": "Post Scorer",
+      "definition": "Establishes position on the block, seals, and scores or doubles-and-passes; the mismatch punishment for switch-heavy defences.",
+      "props": { "exemplar": "Joel Embiid", "illustrative": true },
+      "edges": {
+        "requires": ["skill:post-footwork", "skill:rim-finishing"],
+        "typicalPosition": ["pos:center", "pos:power-forward"],
+        "strongAgainst": ["arch:switchable-defender"]
+      }
+    },
+    {
+      "id": "arch:rim-protector",
+      "type": "Archetype",
+      "label": "Rim Protector",
+      "definition": "Anchors the back line: contests at the rim, deters drives and erases the roll. His presence is the reason drop coverage exists.",
+      "props": { "exemplar": "Rudy Gobert", "illustrative": true },
+      "edges": {
+        "requires": ["skill:length", "skill:help-side-timing", "skill:rebounding"],
+        "typicalPosition": ["pos:center"],
+        "hasRole": ["role:rim-protector"],
+        "strongAgainst": ["arch:slasher", "arch:rim-running-big"],
+        "vulnerableTo": ["arch:roll-and-pop-big", "arch:spacing-big", "arch:pull-up-shooter"]
+      }
+    },
+    {
+      "id": "arch:drop-big",
+      "type": "Archetype",
+      "label": "Drop-Coverage Big",
+      "definition": "A defensive anchor who sinks to the level of the free-throw line in ball screens to protect the rim and concede the pull-up.",
+      "props": { "exemplar": "Brook Lopez", "illustrative": true },
+      "edges": {
+        "requires": ["skill:help-side-timing", "skill:length"],
+        "typicalPosition": ["pos:center"],
+        "strongAgainst": ["arch:rim-running-big", "arch:slasher"],
+        "vulnerableTo": ["arch:pull-up-shooter", "arch:pick-and-roll-initiator"]
+      }
+    },
+    {
+      "id": "arch:perimeter-stopper",
+      "type": "Archetype",
+      "label": "Perimeter Stopper",
+      "definition": "Point-of-attack defender who navigates screens, fights over the top and takes away the initiator's comfort.",
+      "props": { "exemplar": "Marcus Smart", "illustrative": true },
+      "edges": {
+        "requires": ["skill:screen-navigation", "skill:lateral-quickness"],
+        "typicalPosition": ["pos:shooting-guard", "pos:small-forward"],
+        "hasRole": ["role:perimeter-stopper"],
+        "strongAgainst": ["arch:pick-and-roll-initiator"],
+        "vulnerableTo": ["arch:post-scorer"]
+      }
+    },
+    {
+      "id": "arch:switchable-defender",
+      "type": "Archetype",
+      "label": "Switchable Defender",
+      "definition": "Defends 1 through 5 credibly; the enabler of switch-all schemes that take away the pass out of the pick-and-roll.",
+      "props": { "exemplar": "Draymond Green", "illustrative": true },
+      "edges": {
+        "requires": ["skill:switch-versatility", "skill:lateral-quickness", "skill:length"],
+        "typicalPosition": ["pos:power-forward", "pos:small-forward"],
+        "hasRole": ["role:switchable-defender"],
+        "strongAgainst": ["arch:pick-and-roll-initiator", "arch:rim-running-big"],
+        "vulnerableTo": ["arch:post-scorer"]
+      }
+    },
+    {
+      "id": "arch:help-side-roamer",
+      "type": "Archetype",
+      "label": "Help-Side Roamer",
+      "definition": "An off-ball defender who plays the passing lanes and the nail, generating deflections and early offence.",
+      "props": { "exemplar": "Andre Iguodala", "illustrative": true },
+      "edges": {
+        "requires": ["skill:help-side-timing", "skill:length"],
+        "typicalPosition": ["pos:small-forward", "pos:power-forward"],
+        "hasRole": ["role:help-defender"],
+        "vulnerableTo": ["arch:off-ball-sharpshooter"]
+      }
+    },
+    {
+      "id": "arch:aggressive-blitzer",
+      "type": "Archetype",
+      "label": "Aggressive Blitzer",
+      "definition": "A screen defender who attacks the ball handler with a double-team, betting that the offence cannot pass out of it on time.",
+      "props": { "exemplar": "Patrick Beverley", "illustrative": true },
+      "edges": {
+        "requires": ["skill:lateral-quickness", "skill:screen-navigation"],
+        "typicalPosition": ["pos:point-guard", "pos:shooting-guard"],
+        "strongAgainst": ["arch:off-ball-sharpshooter"],
+        "vulnerableTo": ["arch:short-roll-passer", "arch:hub-playmaker"]
+      }
+    }
+  ]
+}

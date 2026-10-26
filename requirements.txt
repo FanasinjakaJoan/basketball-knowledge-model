@@ -1,0 +1,11 @@
+# Runtime dependencies -------------------------------------------------------
+# rdflib    : RDF / JSON-LD / SPARQL projection
+# networkx  : labelled property-graph projection, analytics, node-link export
+# PyYAML    : optional, used by the examples in docs/
+rdflib>=7.0
+networkx>=3.0
+PyYAML>=6.0
+
+# Optional, only needed to render the exported .dot files:
+#   graphviz (system) -- `dot -Tpng play.dot -o play.png`
+# Tests run on the standard library alone:  python -m unittest discover -s tests

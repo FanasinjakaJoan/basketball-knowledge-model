@@ -1,0 +1,262 @@
+{
+  "id": "dataset:rules",
+  "label": "Rules that constrain tactical actions",
+  "definition": "FIBA/NBA-style rules, court dimensions and officiating interpretations that bound what a tactical action may legally do. Thresholds are stated for the NBA rule set; where the FIBA/WNBA value differs it is noted in `note`.",
+  "nodes": [
+    { "id": "ruletype:offensive", "type": "RuleType", "label": "Offensive rule", "definition": "A restriction on the team in possession." },
+    { "id": "ruletype:defensive", "type": "RuleType", "label": "Defensive rule", "definition": "A restriction on the defending team." },
+    { "id": "ruletype:timing", "type": "RuleType", "label": "Timing rule", "definition": "A clock-based restriction (shot clock, backcourt, closely guarded)." },
+    { "id": "ruletype:dimension", "type": "RuleType", "label": "Court dimension", "definition": "A geometric constant that defines spacing and shot value." },
+    { "id": "ruletype:contact", "type": "RuleType", "label": "Contact / foul rule", "definition": "What contact between players is legal." },
+
+    { "id": "penalty:turnover", "type": "Penalty", "label": "Loss of possession", "definition": "The ball is awarded to the opposition." },
+    { "id": "penalty:offensive-foul", "type": "Penalty", "label": "Offensive foul", "definition": "Personal foul charged to the offender; possession to the defence." },
+    { "id": "penalty:technical-ft", "type": "Penalty", "label": "Technical foul (one free throw)", "definition": "One free throw plus possession for the offended team." },
+    { "id": "penalty:defensive-foul", "type": "Penalty", "label": "Defensive foul", "definition": "Personal foul; free throws if in the penalty or on the shot." },
+    { "id": "penalty:not-a-rule", "type": "Penalty", "label": "Definition only", "definition": "No sanction: the rule defines a geometry or a legality condition." },
+
+    {
+      "id": "rule:offensive-three-seconds",
+      "type": "Rule",
+      "label": "Offensive three-second violation",
+      "definition": "An offensive player may not remain in the lane for more than three seconds while his team has possession in the frontcourt. The count stops when he is in the act of shooting, or when he makes a move towards the rim.",
+      "props": {
+        "threshold": "3 seconds in the lane",
+        "penaltyText": "Loss of possession (team turnover)",
+        "key": [
+          "The roll man must keep moving: a roll that parks on the block is a violation waiting to happen",
+          "Post players must 're-set' by stepping out of the lane and re-entering",
+          "Drives the 'duck-in then re-space' rhythm of modern bigs"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:offensive",
+        "hasPenalty": "penalty:turnover",
+        "governs": ["atype:roll-to-rim", "atype:post-up", "atype:duck-in"]
+      }
+    },
+    {
+      "id": "rule:defensive-three-seconds",
+      "type": "Rule",
+      "label": "Defensive three-second violation",
+      "definition": "A defender may not remain in the lane for more than three seconds unless he is actively guarding an opponent within arm's length. This is the rule that stops a rim protector from camping in the paint, and the reason drop coverage bigs must 'show and return'.",
+      "props": {
+        "threshold": "3 seconds in the lane without actively guarding",
+        "penaltyText": "Technical foul: one free throw plus possession",
+        "key": [
+          "A drop-coverage rim protector must stay within arm's length of the rolling big",
+          "Zone defences can concede it: an unguarded lane is a cheap price for shell integrity",
+          "It is the structural reason pure paint-packing defence is impossible in the NBA"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:defensive",
+        "hasPenalty": "penalty:technical-ft",
+        "governs": ["atype:drop-coverage", "atype:rim-protection", "atype:tag-roller"]
+      }
+    },
+    {
+      "id": "rule:shot-clock-24",
+      "type": "Rule",
+      "label": "24-second shot clock",
+      "definition": "The offensive team must attempt a field goal that hits the rim within 24 seconds of gaining possession; an offensive rebound resets the clock to 14 seconds.",
+      "props": {
+        "threshold": "24 seconds (14 after an offensive rebound)",
+        "penaltyText": "Loss of possession",
+        "note": "FIBA resets to 14 seconds after an offensive rebound as well; WNBA is 24/14.",
+        "key": [
+          "Defines the tempo budget of every possession: how many actions a play may contain",
+          "Late-clock situations compress decision trees to a single read",
+          "Shot-clock resets are why offensive rebounding is a possession-extending weapon"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:timing",
+        "hasPenalty": "penalty:turnover",
+        "governs": ["atype:spacing", "atype:late-clock-iso", "atype:crash-offensive-glass"]
+      }
+    },
+    {
+      "id": "rule:backcourt-8-seconds",
+      "type": "Rule",
+      "label": "Eight-second backcourt violation",
+      "definition": "The team in possession must advance the ball across the half-court line within eight seconds.",
+      "props": {
+        "threshold": "8 seconds",
+        "penaltyText": "Loss of possession",
+        "key": [
+          "The tactical reason a full-court press exists: steal the first eight seconds",
+          "Forces press-attack structure: inbound safety, middle release, advance pass"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:timing",
+        "hasPenalty": "penalty:turnover",
+        "governs": ["atype:advance-pass", "atype:press-attack"]
+      }
+    },
+    {
+      "id": "rule:legal-screen",
+      "type": "Rule",
+      "label": "Legal screening",
+      "definition": "A screener must be stationary (or moving in the same direction and speed as the defender) at the moment of contact, must give the defender room to avoid contact, and may not extend hips, knees, elbows or shoulders into the defender.",
+      "props": {
+        "threshold": "Stationary at contact; one normal step of room",
+        "penaltyText": "Offensive foul (illegal screen / moving screen)",
+        "key": [
+          "The screener's feet and shoulder angle decide whether the screen is legal",
+          "'Slip' and 're-screen' actions live entirely inside the legality window",
+          "A moving screen is the most common way a well-designed action dies"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:contact",
+        "hasPenalty": "penalty:offensive-foul",
+        "governs": [
+          "atype:set-on-ball-screen",
+          "atype:down-screen",
+          "atype:flare-screen",
+          "atype:screen-the-screener",
+          "atype:slip-screen"
+        ]
+      }
+    },
+    {
+      "id": "rule:restricted-area-charge",
+      "type": "Rule",
+      "label": "Restricted-area charge rule",
+      "definition": "A defender positioned inside the restricted-area arc under the basket cannot draw an offensive charge; any contact there is a blocking foul or a no-call.",
+      "props": {
+        "threshold": "4ft arc from the centre of the rim",
+        "penaltyText": "Blocking foul if contact is called",
+        "key": [
+          "Taking a charge requires the defender to establish position OUTSIDE the arc",
+          "This is why rim protectors are coached to go vertical rather than slide under the driver",
+          "Defines the geometry of 'nail help' vs 'rim help'"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:contact",
+        "hasPenalty": "penalty:defensive-foul",
+        "governs": ["atype:take-charge", "atype:verticality", "atype:rim-protection", "atype:help-and-recover"]
+      }
+    },
+    {
+      "id": "rule:three-point-distance",
+      "type": "Rule",
+      "label": "Three-point line distance",
+      "definition": "23ft 9in from the rim at the top of the arc, 22ft in the corners, where the arc runs parallel to the sidelines.",
+      "props": {
+        "threshold": "23ft 9in arc / 22ft corner",
+        "penaltyText": "n/a (definition)",
+        "note": "FIBA: 6.75 m (22ft 1.7in) arc, 6.6 m corners. WNBA: 22ft 1.75in.",
+        "key": [
+          "The corner three is the shortest three and therefore the most efficient shot in the sport",
+          "Spacing rules ('corner must be filled') are a direct consequence of this geometry",
+          "Drives rim-protection maths: 3 > 2 forces help to account for the corners"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:dimension",
+        "hasPenalty": "penalty:not-a-rule",
+        "governs": ["zone:corner-three-left", "zone:corner-three-right", "zone:wing-three-left", "zone:wing-three-right", "zone:top-of-key-three"]
+      }
+    },
+    {
+      "id": "rule:goaltending",
+      "type": "Rule",
+      "label": "Goaltending / basket interference",
+      "definition": "Once a shot is on its downward flight above the rim's level, no player may touch the ball; nor may a player touch the rim, net or ball while it is on the rim or in the cylinder.",
+      "props": {
+        "threshold": "Ball on downward flight / on the cylinder",
+        "penaltyText": "Basket awarded (offensive) or no basket (defensive interference on a try)",
+        "key": [
+          "Makes 'high-point the lob' the correct finishing technique for the roll man",
+          "Limits how deep a rim protector may commit after the release"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:offensive",
+        "hasPenalty": "penalty:not-a-rule",
+        "governs": ["atype:lob-finish", "atype:rim-protection", "atype:verticality"]
+      }
+    },
+    {
+      "id": "rule:traveling-gather",
+      "type": "Rule",
+      "label": "Traveling / gather step",
+      "definition": "A player may take two steps after the gather (the gather step itself is not counted) before releasing or stopping the dribble; lifting the pivot foot before releasing the ball is a traveling violation.",
+      "props": {
+        "threshold": "Two steps after the gather",
+        "penaltyText": "Loss of possession",
+        "key": [
+          "The two-step allowance is what makes Euro-steps, spin gathers and pro-hops legal",
+          "Screen-and-go footwork (snake, reject, re-screen) is bounded by the gather rule"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:offensive",
+        "hasPenalty": "penalty:turnover",
+        "governs": ["atype:dribble-penetration", "atype:snake-dribble", "atype:use-screen", "atype:post-up"]
+      }
+    },
+    {
+      "id": "rule:closely-guarded-5-seconds",
+      "type": "Rule",
+      "label": "Five-second closely guarded",
+      "definition": "A player holding the ball while closely guarded (within six feet) for five seconds commits a violation; the same count applies to a player inbounding the ball.",
+      "props": {
+        "threshold": "5 seconds while guarded within 6ft",
+        "penaltyText": "Loss of possession",
+        "key": [
+          "Traps and blitzes are only viable because of this count",
+          "Forces a bail-out option (safety valve) in every press-break and BLOB"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:timing",
+        "hasPenalty": "penalty:turnover",
+        "governs": ["atype:trap", "atype:blitz", "atype:inbound", "atype:ball-reversal"]
+      }
+    },
+    {
+      "id": "rule:freedom-of-movement",
+      "type": "Rule",
+      "label": "Freedom of movement / hand-check",
+      "definition": "A defender may not impede the progress of an offensive player who does not have the ball by grabbing, holding, bumping or riding him off his path; on-ball hand-checking and 'holding' with the forearm are likewise illegal.",
+      "props": {
+        "threshold": "Any displacement of an off-ball mover",
+        "penaltyText": "Defensive foul",
+        "key": [
+          "The legal foundation of off-ball movement: cuts and screens cannot be physically jammed",
+          "Why zones and 'pack-line' defences rely on positioning rather than contact",
+          "Bumping a cutter is a foul, not a tactic: defenders must 'get through' instead"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:contact",
+        "hasPenalty": "penalty:defensive-foul",
+        "governs": ["atype:basket-cut", "atype:backdoor-cut", "atype:relocate", "atype:down-screen", "atype:bump-the-cutter"]
+      }
+    },
+    {
+      "id": "rule:clear-path",
+      "type": "Rule",
+      "label": "Clear-path foul",
+      "definition": "A foul committed on an offensive player who is ahead of all defenders with a clear path to the basket results in two free throws and possession.",
+      "props": {
+        "threshold": "Ball handler ahead of the field, no defender between him and the rim",
+        "penaltyText": "Two free throws plus possession",
+        "key": [
+          "Transition defences must sprint to a 'level' with the ball rather than chase from behind",
+          "Defines the 'sprint back, build a wall' rule of transition defence"
+        ]
+      },
+      "edges": {
+        "hasRuleType": "ruletype:defensive",
+        "hasPenalty": "penalty:defensive-foul",
+        "governs": ["atype:transition-defence", "atype:rim-run"]
+      }
+    }
+  ]
+}

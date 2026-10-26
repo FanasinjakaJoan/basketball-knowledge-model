@@ -1,0 +1,20 @@
+# Basketball Knowledge Model -- example query
+# question : What happens after the roll?
+# intent   : sequence
+# slots    : action=pnr:s5-roll
+# note     : precedes / follows: the temporal spine of a play.
+# generated: python scripts/gen_queries.py (do not edit by hand)
+PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>
+PREFIX bkr:  <https://w3id.org/basketball-kg/resource/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+# What happens before and after a given step.
+SELECT ?relation ?other ?otherLabel ?actionType
+WHERE {
+  FILTER(?step = <https://w3id.org/basketball-kg/resource/pnr/s5-roll>)
+  { ?step bk:precedes ?other . BIND("after" AS ?relation) }
+  UNION { ?other bk:precedes ?step . BIND("before" AS ?relation) }
+  OPTIONAL { ?other skos:prefLabel ?otherLabel }
+  OPTIONAL { ?other bk:hasActionType ?actionType }
+}
+ORDER BY ?relation ?other

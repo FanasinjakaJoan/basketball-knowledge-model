@@ -1,0 +1,5 @@
+"""``python -m basketball_kg`` -- command line entry point."""
+
+from .cli import main
+
+raise SystemExit(main())

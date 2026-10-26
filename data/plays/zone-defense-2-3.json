@@ -1,0 +1,233 @@
+{
+  "id": "dataset:play-zone-defense-2-3",
+  "label": "Zone 2-3 - the paint-protecting shell",
+  "definition": "Two defenders across the top, three along the bottom. The 2-3 protects the rim and the defensive glass, concedes the above-the-break three, and dares the offence to beat it with passing, patience and shot-making. Its structure is a set of area assignments plus three movement rules: move on the flight of the ball, touch the midline, bump and release cutters.",
+  "props": {
+    "formation": "2-3 shell (two up, three across)",
+    "key": [
+      "Move on the flight of the ball: the shell slides with every pass, not after it",
+      "Touch the midline: weak-side back-line defenders must be in help position on the split line",
+      "Bump cutters as they pass through your area, then release them to the next defender",
+      "The top two 'match' the ball and take away the middle",
+      "Rebounding is the zone's structural weakness: everyone must find a body",
+      "The free-throw line is 'the hole': a catch there splits the bottom three"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "play:zone-defense-2-3",
+      "type": "DefensivePlay",
+      "label": "Zone 2-3 Defence",
+      "definition": "A five-man area defence organised as two perimeter defenders over three back-line defenders.",
+      "props": { "aliases": ["2-3 zone", "two-three"], "shotClockBudgetSeconds": 24 },
+      "edges": {
+        "hasFormation": "form:two-three-shell",
+        "appliesIn": ["sit:half-court", "sit:blob", "sit:ato"],
+        "requires": ["arch:rim-protector", "arch:help-side-roamer", "arch:perimeter-stopper"],
+        "produces": ["outcome:turnover-forced", "outcome:deflection", "outcome:open-midrange"],
+        "hasCounter": [
+          "counter:high-post-vs-2-3",
+          "counter:overload-vs-2-3",
+          "counter:ball-reversal-vs-2-3",
+          "counter:offensive-glass-vs-2-3",
+          "counter:transition-vs-2-3"
+        ],
+        "relatedTo": ["scheme:zone-2-3", "scheme:matchup-zone", "scheme:zone-3-2"]
+      }
+    },
+
+    {
+      "id": "z23:a1-top-left",
+      "type": "Assignment",
+      "label": "Top-left guard",
+      "definition": "The left of the two top defenders. Meets the ball at the top, matches to the ball side, and takes away the middle drive.",
+      "props": { "aliases": ["left top", "chaser"] },
+      "edges": {
+        "ofScheme": "play:zone-defense-2-3",
+        "heldBy": "role:on-ball-defender",
+        "coversZone": ["zone:top-of-key-three", "zone:wing-three-left", "zone:high-post"],
+        "requires": ["skill:lateral-quickness", "skill:screen-navigation"]
+      }
+    },
+    {
+      "id": "z23:a2-top-right",
+      "type": "Assignment",
+      "label": "Top-right guard",
+      "definition": "The right of the two top defenders. Mirrors the left, sinks towards the free-throw line when the ball is on the strong side, and sprints to the new ball side on a reversal.",
+      "props": { "aliases": ["right top"] },
+      "edges": {
+        "ofScheme": "play:zone-defense-2-3",
+        "heldBy": "role:perimeter-stopper",
+        "coversZone": ["zone:top-of-key-three", "zone:wing-three-right", "zone:high-post"],
+        "requires": ["skill:lateral-quickness", "skill:screen-navigation"]
+      }
+    },
+    {
+      "id": "z23:a3-bottom-left",
+      "type": "Assignment",
+      "label": "Bottom-left (forward)",
+      "definition": "The left of the three back-line defenders. Guards the left short corner and the left corner three, and must touch the midline of the lane when the ball is on the weak side.",
+      "props": { "aliases": ["left bottom", "corner man"] },
+      "edges": {
+        "ofScheme": "play:zone-defense-2-3",
+        "heldBy": "role:help-defender",
+        "coversZone": ["zone:corner-three-left", "zone:short-corner-left", "zone:low-post-left", "zone:elbow-left"],
+        "requires": ["skill:help-side-timing", "skill:rebounding", "arch:help-side-roamer"]
+      }
+    },
+    {
+      "id": "z23:a4-bottom-middle",
+      "type": "Assignment",
+      "label": "Bottom-middle (anchor)",
+      "definition": "The middle of the three back-line defenders. Owns the paint and the restricted area, steps up to the high post when the ball goes there, and is the last line at the rim.",
+      "props": { "aliases": ["the anchor", "middle man"], "key": ["Must step to the free-throw line: the hole is his responsibility", "Cannot camp in the lane: the defensive three-second rule still applies"] },
+      "edges": {
+        "ofScheme": "play:zone-defense-2-3",
+        "heldBy": "role:rim-protector",
+        "coversZone": ["zone:paint", "zone:restricted-area", "zone:high-post"],
+        "constrainedBy": ["rule:defensive-three-seconds", "rule:restricted-area-charge"],
+        "requires": ["skill:length", "skill:help-side-timing", "arch:rim-protector"]
+      }
+    },
+    {
+      "id": "z23:a5-bottom-right",
+      "type": "Assignment",
+      "label": "Bottom-right (forward)",
+      "definition": "The right of the three back-line defenders. Guards the right short corner and the right corner three, and must touch the midline of the lane when the ball is on the weak side.",
+      "props": { "aliases": ["right bottom"] },
+      "edges": {
+        "ofScheme": "play:zone-defense-2-3",
+        "heldBy": "role:help-defender",
+        "coversZone": ["zone:corner-three-right", "zone:short-corner-right", "zone:low-post-right", "zone:elbow-right"],
+        "requires": ["skill:help-side-timing", "skill:rebounding", "arch:help-side-roamer"]
+      }
+    },
+
+    {
+      "id": "z23:s1-set-shell",
+      "type": "Action",
+      "label": "Set the shell",
+      "definition": "Two defenders at the level of the top of the key, three across the bottom of the lane; every defender in his area, hands in the passing lanes, feet in a stance.",
+      "props": { "order": 1, "participants": "all five defenders", "key": ["The shell must be visible: hands up, five sets of eyes on the ball", "The bottom three align to the ball, not to the baseline"] },
+      "edges": {
+        "stepOf": "play:zone-defense-2-3",
+        "hasActionType": "atype:spacing",
+        "actor": "role:help-defender",
+        "occursIn": "zone:frontcourt",
+        "precedes": ["z23:s2-match-ball"]
+      }
+    },
+    {
+      "id": "z23:s2-match-ball",
+      "type": "Action",
+      "label": "Top defenders match the ball",
+      "definition": "The top two slide with the ball: the ball-side top defender meets it above the break, the weak-side top defender sinks to the free-throw line extended to take away the middle pass.",
+      "props": { "order": 2, "key": ["No middle: force the ball to the sideline where the shell has help", "The top two must communicate the pass-off on every swing"] },
+      "edges": {
+        "stepOf": "play:zone-defense-2-3",
+        "hasActionType": "atype:contain-ball",
+        "actor": "role:on-ball-defender",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:wing-three-left",
+        "requires": ["skill:lateral-quickness"],
+        "precedes": ["z23:s3-bottom-align"]
+      }
+    },
+    {
+      "id": "z23:s3-bottom-align",
+      "type": "Action",
+      "label": "Bottom three align to the ball",
+      "definition": "The back line slides with the ball: ball-side bottom man to the short corner, middle man to the split line on the ball side, weak-side bottom man on the midline of the lane.",
+      "props": { "order": 3, "parallelWith": "z23:s2-match-ball", "key": ["Align to the ball, then to the baseline", "Never let the ball-side corner man get isolated against two offensive players"] },
+      "edges": {
+        "stepOf": "play:zone-defense-2-3",
+        "hasActionType": "atype:rotate",
+        "actor": "role:help-defender",
+        "startsIn": "zone:paint",
+        "endsIn": "zone:short-corner-left",
+        "requires": ["skill:help-side-timing"],
+        "precedes": ["z23:s4-touch-midline"]
+      }
+    },
+    {
+      "id": "z23:s4-touch-midline",
+      "type": "Action",
+      "label": "Touch the midline",
+      "definition": "The weak-side back-line defender keeps a foot on or past the midline of the lane, so that he is in help position the instant the ball is reversed.",
+      "props": { "order": 4, "key": ["A foot on the line, not a body in the lane", "The midline is the difference between a rotation and a scramble"] },
+      "edges": {
+        "stepOf": "play:zone-defense-2-3",
+        "hasActionType": "atype:touch-the-midline",
+        "actor": "role:help-defender",
+        "occursIn": "zone:paint",
+        "requires": ["skill:help-side-timing"],
+        "constrainedBy": ["rule:defensive-three-seconds"],
+        "precedes": ["z23:s5-bump-cutter"]
+      }
+    },
+    {
+      "id": "z23:s5-bump-cutter",
+      "type": "Action",
+      "label": "Bump the cutter, then release him",
+      "definition": "When an offensive player cuts through your area, displace him for a beat to break the timing, then hand him to the next area's defender.",
+      "props": { "order": 5, "key": ["A bump is momentary: displace, do not hold", "Communication is the mechanism: 'bump, bump, release'"] },
+      "edges": {
+        "stepOf": "play:zone-defense-2-3",
+        "hasActionType": "atype:bump-the-cutter",
+        "actor": "role:help-defender",
+        "occursIn": "zone:paint",
+        "constrainedBy": ["rule:freedom-of-movement"],
+        "requires": ["skill:help-side-timing"],
+        "precedes": ["z23:s6-rotate-on-pass"]
+      }
+    },
+    {
+      "id": "z23:s6-rotate-on-pass",
+      "type": "Action",
+      "label": "Rotate on the flight of the ball",
+      "definition": "Every pass moves the shell one step: defenders slide on the flight, not after the catch, and the last man to move closes out under control.",
+      "props": { "order": 6, "key": ["Move when the ball is in the air", "The closeout must be controlled: chop, hand up, no fly-bys"] },
+      "edges": {
+        "stepOf": "play:zone-defense-2-3",
+        "hasActionType": "atype:rotate",
+        "actor": "role:help-defender",
+        "startsIn": "zone:short-corner-left",
+        "endsIn": "zone:short-corner-right",
+        "requires": ["skill:help-side-timing"],
+        "precedes": ["z23:s7-answer-reversal"]
+      }
+    },
+    {
+      "id": "z23:s7-answer-reversal",
+      "type": "Action",
+      "label": "Answer the ball reversal",
+      "definition": "On a top-to-wing-to-top reversal the top defenders sprint to the new ball side and the bottom three slide across; this second shift is where the zone is most vulnerable, so the bottom men must sprint the width of the lane.",
+      "props": { "order": 7, "key": ["The second shift is the kill: sprint it or concede the corner three", "Do not watch the ball: move with it"] },
+      "edges": {
+        "stepOf": "play:zone-defense-2-3",
+        "hasActionType": "atype:closeout",
+        "actor": "role:perimeter-stopper",
+        "startsIn": "zone:wing-three-left",
+        "endsIn": "zone:wing-three-right",
+        "requires": ["skill:lateral-quickness"],
+        "produces": ["outcome:open-midrange"],
+        "precedes": ["z23:s8-box-out"]
+      }
+    },
+    {
+      "id": "z23:s8-box-out",
+      "type": "Action",
+      "label": "Find a body and box out",
+      "definition": "As soon as a shot goes up, every defender finds the nearest offensive player, makes contact and goes for the ball. The zone's structural weakness ends here.",
+      "props": { "order": 8, "key": ["Area defence means nobody owns a man: that is the weakness on the glass", "The bottom three must be the first to a body, not the first to the ball"] },
+      "edges": {
+        "stepOf": "play:zone-defense-2-3",
+        "hasActionType": "atype:box-out",
+        "actor": "role:rebounder",
+        "occursIn": "zone:paint",
+        "requires": ["skill:rebounding"],
+        "produces": ["outcome:deflection"]
+      }
+    }
+  ]
+}
