@@ -1,0 +1,545 @@
+{
+  "generated": "python scripts/gen_queries.py -- do not edit by hand",
+  "note": "Natural-language questions resolved by basketball_kg.nlq.parse, with every rendering of the resulting query plan.",
+  "intents": {
+    "describe": {
+      "slots": [
+        "target"
+      ],
+      "purpose": "Explain any node: a play, scheme, zone, archetype, rule or coverage.",
+      "examples": [
+        "What is drop coverage?",
+        "Describe the short corner.",
+        "What is a hub playmaker?"
+      ]
+    },
+    "play_steps": {
+      "slots": [
+        "play"
+      ],
+      "purpose": "List the ordered steps of a play with actor, zones, requirements and constraints.",
+      "examples": [
+        "Walk me through the pick and roll.",
+        "What are the steps of motion offence?"
+      ]
+    },
+    "zone_responsibility": {
+      "slots": [
+        "zone",
+        "scheme"
+      ],
+      "purpose": "Which defender/role is responsible for a zone in a defensive scheme.",
+      "examples": [
+        "Who covers the corner in a 2-3 zone?",
+        "What are the 2-3 zone assignments?"
+      ]
+    },
+    "counters": {
+      "slots": [
+        "target"
+      ],
+      "purpose": "Tactical answers to a scheme, coverage or play, and the weakness each exploits.",
+      "examples": [
+        "How do you attack a 2-3 zone?",
+        "What beats drop coverage?",
+        "What counters the pick and roll?"
+      ]
+    },
+    "rules": {
+      "slots": [
+        "target"
+      ],
+      "purpose": "The rules that constrain a play, action type or zone.",
+      "examples": [
+        "What rules govern setting a screen?",
+        "Is a moving screen legal?",
+        "What constrains the roll man?"
+      ]
+    },
+    "requirements": {
+      "slots": [
+        "target"
+      ],
+      "purpose": "The archetypes and skills a scheme, play or action demands.",
+      "examples": [
+        "What kind of player can run a short roll?",
+        "What does switch-all require?"
+      ]
+    },
+    "fit": {
+      "slots": [
+        "scheme",
+        "team"
+      ],
+      "purpose": "Which players on a roster satisfy a scheme's archetype requirements.",
+      "examples": [
+        "Who on Harbour fits switch all?",
+        "Which players can run the pick and roll?"
+      ]
+    },
+    "situations": {
+      "slots": [
+        "situation"
+      ],
+      "purpose": "Which schemes or plays apply in a given game situation.",
+      "examples": [
+        "What should we run against a press?",
+        "What works late in the shot clock?"
+      ]
+    },
+    "spatial": {
+      "slots": [
+        "zone"
+      ],
+      "purpose": "Geometry of a zone: neighbours, shot value, containment and distance.",
+      "examples": [
+        "What is next to the short corner?",
+        "Where is the high post?",
+        "Which zone has the highest shot value?"
+      ]
+    },
+    "sequence": {
+      "slots": [
+        "action"
+      ],
+      "purpose": "What happens before and after a given step.",
+      "examples": [
+        "What happens after the roll?",
+        "What comes before the skip pass?"
+      ]
+    },
+    "compare": {
+      "slots": [
+        "a",
+        "b"
+      ],
+      "purpose": "Put two schemes, coverages or archetypes side by side.",
+      "examples": [
+        "Compare drop and blitz.",
+        "What is the difference between hedge and ICE?"
+      ]
+    },
+    "search": {
+      "slots": [
+        "text"
+      ],
+      "purpose": "Fallback ranked search across the whole graph.",
+      "examples": [
+        "nail help",
+        "weak side"
+      ]
+    }
+  },
+  "examples": [
+    {
+      "question": "Walk me through the pick and roll.",
+      "expected_intent": "play_steps",
+      "expected_slots": {
+        "play": "play:pick-and-roll"
+      },
+      "parsed": {
+        "intent": "play_steps",
+        "slots": {
+          "play": "play:pick-and-roll"
+        },
+        "confidence": 0.8,
+        "evidence": [
+          "rule:play_steps matched /\\b(step(s)?|sequence|walk me through|break ?down.../",
+          "slot:play <- 'pick and roll' (play:pick-and-roll)"
+        ]
+      },
+      "rows_returned": 20,
+      "summary": "Pick and Roll: 19 steps, 1 decision point(s). Formation: 4-Out-1-In",
+      "graph_pattern": [
+        {
+          "s": "?play",
+          "p": "hasStep",
+          "o": "?step"
+        },
+        {
+          "s": "?step",
+          "p": "hasActionType",
+          "o": "?actionType"
+        },
+        {
+          "s": "?step",
+          "p": "actor",
+          "o": "?actor"
+        },
+        {
+          "s": "?step",
+          "p": "startsIn",
+          "o": "?from"
+        },
+        {
+          "s": "?step",
+          "p": "endsIn",
+          "o": "?to"
+        },
+        {
+          "s": "?step",
+          "p": "precedes",
+          "o": "?next"
+        }
+      ],
+      "sparql": "PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>\nPREFIX bkr:  <https://w3id.org/basketball-kg/resource/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n\n# Ordered steps of a play, with actor, action type and the zones it moves through.\nSELECT ?order ?step ?stepLabel ?actionType ?actor ?fromZone ?toZone ?next\nWHERE {\n  ?play bk:hasStep ?step .\n  FILTER(?play = <https://w3id.org/basketball-kg/resource/play/pick-and-roll>)\n  ?step skos:prefLabel ?stepLabel .\n  OPTIONAL { ?step bk:order ?order }\n  OPTIONAL { ?step bk:hasActionType ?actionType }\n  OPTIONAL { ?step bk:actor ?actor }\n  OPTIONAL { ?step bk:startsIn ?fromZone }\n  OPTIONAL { ?step bk:endsIn ?toZone }\n  OPTIONAL { SELECT ?step (GROUP_CONCAT(?nextLabel; SEPARATOR=\", \") AS ?next)\n            WHERE { ?step bk:precedes/skos:prefLabel ?nextLabel }\n            GROUP BY ?step }\n}\nORDER BY ?order",
+      "cypher": "// Ordered steps of a play (property-graph form)\nMATCH (p:Play {id: 'play:pick-and-roll'})-[:HAS_STEP]->(s:Action)\nOPTIONAL MATCH (s)-[:HAS_ACTION_TYPE]->(t:ActionType)\nOPTIONAL MATCH (s)-[:ACTOR]->(r:Role)\nOPTIONAL MATCH (s)-[:STARTS_IN]->(z1:Zone)\nOPTIONAL MATCH (s)-[:ENDS_IN]->(z2:Zone)\nOPTIONAL MATCH (s)-[:PRECEDES]->(n:Action)\nRETURN s.order AS order, s.label AS step, t.label AS actionType, r.label AS actor,\n       z1.label AS fromZone, z2.label AS toZone, n.label AS next\nORDER BY order;",
+      "query_file": "queries/sparql/01-pick-and-roll-steps.rq"
+    },
+    {
+      "question": "What are the 2-3 zone assignments?",
+      "expected_intent": "zone_responsibility",
+      "expected_slots": {
+        "scheme": "play:zone-defense-2-3"
+      },
+      "parsed": {
+        "intent": "zone_responsibility",
+        "slots": {
+          "scheme": "scheme:zone-2-3"
+        },
+        "confidence": 0.8,
+        "evidence": [
+          "rule:zone_responsibility matched /\\b(who|which (player|defender|role|man))\\b.*\\b(c.../",
+          "slot:scheme <- '2 3 zone' (scheme:zone-2-3)"
+        ]
+      },
+      "rows_returned": 5,
+      "summary": "Zone 2-3: 5 area assignments",
+      "graph_pattern": [
+        {
+          "s": "?assignment",
+          "p": "ofScheme",
+          "o": "?scheme"
+        },
+        {
+          "s": "?assignment",
+          "p": "coversZone",
+          "o": "?zone"
+        },
+        {
+          "s": "?assignment",
+          "p": "heldBy",
+          "o": "?role"
+        }
+      ],
+      "sparql": "PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>\nPREFIX bkr:  <https://w3id.org/basketball-kg/resource/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n\n# Who is responsible for which area, in which scheme.\nSELECT ?scheme ?assignment ?assignmentLabel ?heldBy\n       (GROUP_CONCAT(DISTINCT ?zoneLabel; SEPARATOR=\", \") AS ?zones)\nWHERE {\n  ?assignment bk:ofScheme ?scheme ;\n              bk:coversZone ?zone .\n  OPTIONAL { ?assignment bk:heldBy ?heldBy }\n  OPTIONAL { ?assignment skos:prefLabel ?assignmentLabel }\n  OPTIONAL { ?zone skos:prefLabel ?zoneLabel }\n  FILTER(?scheme = <https://w3id.org/basketball-kg/resource/scheme/zone-2-3>)\n}\nGROUP BY ?scheme ?assignment ?assignmentLabel ?heldBy\nORDER BY ?assignment",
+      "cypher": "// Area responsibilities in a defensive scheme\nMATCH (a:Assignment)-[:OF_SCHEME]->(s)\nMATCH (a)-[:COVERS_ZONE]->(z:Zone)\nOPTIONAL MATCH (a)-[:HELD_BY]->(r:Role)\nWHERE s.id = 'scheme:zone-2-3'\nRETURN s.label AS scheme, a.label AS assignment, r.label AS heldBy, collect(z.label) AS zones\nORDER BY assignment;",
+      "query_file": "queries/sparql/02-zone-2-3-responsibilities.rq"
+    },
+    {
+      "question": "How do you attack a 2-3 zone?",
+      "expected_intent": "counters",
+      "expected_slots": {
+        "target": "scheme:zone-2-3"
+      },
+      "parsed": {
+        "intent": "counters",
+        "slots": {
+          "target": "scheme:zone-2-3"
+        },
+        "confidence": 0.8,
+        "evidence": [
+          "rule:counters matched /\\b(attack(s|ing)?|beat(s|ing|en)?|break(s|ing)?|.../",
+          "slot:target <- '2 3 zone' (scheme:zone-2-3)"
+        ]
+      },
+      "rows_returned": 5,
+      "summary": "5 tactical answer(s) to Zone 2-3",
+      "graph_pattern": [
+        {
+          "s": "?target",
+          "p": "hasCounter",
+          "o": "?counter"
+        },
+        {
+          "s": "?counter",
+          "p": "answers",
+          "o": "?target"
+        },
+        {
+          "s": "?counter",
+          "p": "exploits",
+          "o": "?weakness"
+        }
+      ],
+      "sparql": "PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>\nPREFIX bkr:  <https://w3id.org/basketball-kg/resource/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n\n# Every tactical answer to a scheme/coverage, plus the weakness it exploits.\nSELECT ?kind ?counter ?counterLabel ?vulnerability ?rationale ?effectiveness ?exploits\nWHERE {\n  FILTER(?target = <https://w3id.org/basketball-kg/resource/scheme/zone-2-3>)\n  {\n    ?target bk:hasCounter ?counter .\n  } UNION {\n    ?counter bk:answers ?target .\n  } UNION {\n    ?counter bk:exploits ?target .\n  }\n  ?counter skos:prefLabel ?counterLabel .\n  BIND(IF(EXISTS { ?counter a bk:Counter }, \"counter\", \"branch step\") AS ?kind)\n  OPTIONAL { ?counter bk:vulnerability ?vulnerability }\n  OPTIONAL { ?counter bk:rationale ?rationale }\n  OPTIONAL { ?counter bk:effectiveness ?effectiveness }\n  OPTIONAL { SELECT ?counter (GROUP_CONCAT(?weaknessLabel; SEPARATOR=\", \") AS ?exploits)\n            WHERE { ?counter bk:exploits/skos:prefLabel ?weaknessLabel }\n            GROUP BY ?counter }\n}\nGROUP BY ?kind ?counter ?counterLabel ?vulnerability ?rationale ?effectiveness\nORDER BY ?kind DESC(?effectiveness) ?counter",
+      "cypher": "// Tactical answers to a scheme or coverage\nMATCH (t {id: 'scheme:zone-2-3'})\nMATCH (c:Counter) WHERE (t)-[:HAS_COUNTER]->(c) OR (c)-[:ANSWERS]->(t) OR (c)-[:EXPLOITS]->(t)\nOPTIONAL MATCH (c)-[:EXPLOITS]->(w)\nRETURN c.label AS counter, c.vulnerability AS vulnerability, c.rationale AS rationale,\n       c.effectiveness AS effectiveness, collect(DISTINCT w.label) AS exploits\nORDER BY c.effectiveness DESC;",
+      "query_file": "queries/sparql/03-attack-the-2-3-zone.rq"
+    },
+    {
+      "question": "What rules govern setting a screen?",
+      "expected_intent": "rules",
+      "expected_slots": {
+        "target": "atype:set-on-ball-screen"
+      },
+      "parsed": {
+        "intent": "rules",
+        "slots": {
+          "target": "atype:set-on-ball-screen"
+        },
+        "confidence": 0.7,
+        "evidence": [
+          "rule:rules matched /\\b(rule(s)?|legal(ly)?|illegal(ly)?|violation(s).../",
+          "slot:target <- 'setting a screen' (atype:set-on-ball-screen)"
+        ]
+      },
+      "rows_returned": 1,
+      "summary": "1 rule(s) constrain Set an on-ball screen (ball screen)",
+      "graph_pattern": [
+        {
+          "s": "?target",
+          "p": "constrainedBy",
+          "o": "?rule"
+        },
+        {
+          "s": "?rule",
+          "p": "governs",
+          "o": "?target"
+        },
+        {
+          "s": "?rule",
+          "p": "hasRuleType",
+          "o": "?ruleType"
+        }
+      ],
+      "sparql": "PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>\nPREFIX bkr:  <https://w3id.org/basketball-kg/resource/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n\n# Rules that constrain a target directly, through its steps, or through its action types.\nSELECT DISTINCT ?rule ?ruleLabel ?ruleType ?threshold ?penaltyText\nWHERE {\n  FILTER(?target = <https://w3id.org/basketball-kg/resource/atype/set-on-ball-screen>)\n  { ?target bk:constrainedBy ?rule }\n  UNION { ?rule bk:governs ?target }\n  UNION { ?target bk:hasStep ?step . ?step bk:constrainedBy ?rule }\n  UNION { ?target bk:hasStep ?step . ?step bk:hasActionType ?type . ?type bk:constrainedBy ?rule }\n  UNION { ?target bk:hasActionType ?type . ?type bk:constrainedBy ?rule }\n  ?rule skos:prefLabel ?ruleLabel .\n  OPTIONAL { ?rule bk:hasRuleType ?ruleType }\n  OPTIONAL { ?rule bk:threshold ?threshold }\n  OPTIONAL { ?rule bk:penaltyText ?penaltyText }\n}\nORDER BY ?rule",
+      "cypher": "// Rules constraining a play / action / zone\nMATCH (t {id: 'atype:set-on-ball-screen'})\nOPTIONAL MATCH (t)-[:CONSTRAINED_BY|:HAS_STEP|]->(x)\nOPTIONAL MATCH (x)-[:CONSTRAINED_BY]->(r:Rule)\nOPTIONAL MATCH (t)<-[:GOVERNS]-(r2:Rule)\nOPTIONAL MATCH (t)-[:HAS_ACTION_TYPE]->(at)-[:CONSTRAINED_BY]->(r3:Rule)\nWITH collect(DISTINCT r) + collect(DISTINCT r2) + collect(DISTINCT r3) AS rules\nUNWIND rules AS rule\nWITH DISTINCT rule WHERE rule IS NOT NULL\nOPTIONAL MATCH (rule)-[:HAS_RULE_TYPE]->(rt:RuleType)\nRETURN rule.label AS rule, rt.label AS ruleType, rule.threshold AS threshold, rule.penaltyText AS penalty;",
+      "query_file": "queries/sparql/04-rules-for-screening.rq"
+    },
+    {
+      "question": "Which players fit a switch-everything scheme?",
+      "expected_intent": "fit",
+      "expected_slots": {
+        "scheme": "scheme:switch-all"
+      },
+      "parsed": {
+        "intent": "fit",
+        "slots": {
+          "scheme": "scheme:switch-all"
+        },
+        "confidence": 0.7,
+        "evidence": [
+          "rule:fit matched /\\b(roster|who on|which players?|who fits|line ?u.../",
+          "slot:scheme <- 'switch everything' (scheme:switch-all)"
+        ]
+      },
+      "rows_returned": 10,
+      "summary": "Switch-All (Switch Everything) needs: Switchable Defender",
+      "graph_pattern": [
+        {
+          "s": "?scheme",
+          "p": "requires",
+          "o": "?archetype"
+        },
+        {
+          "s": "?player",
+          "p": "hasArchetype",
+          "o": "?archetype"
+        },
+        {
+          "s": "?player",
+          "p": "playsFor",
+          "o": "?team"
+        }
+      ],
+      "sparql": "PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>\nPREFIX bkr:  <https://w3id.org/basketball-kg/resource/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n\n# Which players carry the archetypes a scheme requires.\nSELECT ?player ?playerLabel ?team ?position ?archetype\nWHERE {\n  ?scheme bk:requires ?archetype .\n  FILTER(?scheme = <https://w3id.org/basketball-kg/resource/scheme/switch-all>)\n  ?player a bk:Player ;\n          bk:hasArchetype ?archetype .\n  OPTIONAL { ?player skos:prefLabel ?playerLabel }\n  OPTIONAL { ?player bk:playsFor ?team }\n  OPTIONAL { ?player bk:occupiesPosition ?position }\n\n}\nORDER BY ?playerLabel ?archetype",
+      "cypher": "// Roster fit: players carrying the archetypes a scheme needs\nMATCH (s:Scheme {id: 'scheme:switch-all'})-[:REQUIRES]->(arch)\nMATCH (pl:Player)-[:HAS_ARCHETYPE]->(arch)\n\nOPTIONAL MATCH (pl)-[:PLAYS_FOR]->(team:Team)\nOPTIONAL MATCH (pl)-[:OCCUPIES_POSITION]->(pos:Position)\nRETURN pl.label AS player, team.label AS team, pos.abbreviation AS position,\n       count(DISTINCT arch) AS matches, collect(DISTINCT arch.label) AS archetypes\nORDER BY matches DESC, player;",
+      "query_file": "queries/sparql/05-roster-fit-switch-all.rq"
+    },
+    {
+      "question": "What is next to the short corner?",
+      "expected_intent": "spatial",
+      "expected_slots": {
+        "zone": "zone:short-corner-left"
+      },
+      "parsed": {
+        "intent": "spatial",
+        "slots": {
+          "zone": "zone:short-corner-left"
+        },
+        "confidence": 0.7,
+        "evidence": [
+          "rule:spatial matched /\\b(adjacent|next to|near|beside|between|where (i.../",
+          "slot:zone <- 'short corner' (zone:short-corner-left)"
+        ]
+      },
+      "rows_returned": 5,
+      "summary": "Left Short Corner: shot value 2, 4 adjacent zone(s)",
+      "graph_pattern": [
+        {
+          "s": "?zone",
+          "p": "adjacentTo",
+          "o": "?neighbour"
+        },
+        {
+          "s": "?zone",
+          "p": "hasZoneType",
+          "o": "?zoneType"
+        },
+        {
+          "s": "?zone",
+          "p": "partOf",
+          "o": "?container"
+        }
+      ],
+      "sparql": "PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>\nPREFIX bkr:  <https://w3id.org/basketball-kg/resource/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n\n# Spatial neighbourhood of a zone: containment, adjacency and shot value.\nSELECT ?zone ?zoneLabel ?zoneType ?partOf ?shotValue ?neighbour ?neighbourValue\nWHERE {\n  FILTER(?zone = <https://w3id.org/basketball-kg/resource/zone/short-corner-left>)\n  OPTIONAL { ?zone skos:prefLabel ?zoneLabel }\n  OPTIONAL { ?zone bk:hasZoneType ?zoneType }\n  OPTIONAL { ?zone bk:partOf ?partOf }\n  OPTIONAL { ?zone bk:shotValue ?shotValue }\n  OPTIONAL { ?zone bk:adjacentTo ?neighbour . OPTIONAL { ?neighbour bk:shotValue ?neighbourValue } }\n}",
+      "cypher": "// Spatial neighbourhood of a zone\nMATCH (z:Zone {id: 'zone:short-corner-left'})\nOPTIONAL MATCH (z)-[:ADJACENT_TO]->(n:Zone)\nOPTIONAL MATCH (z)-[:PART_OF]->(p:Zone)\nOPTIONAL MATCH (z)-[:HAS_ZONE_TYPE]->(zt:ZoneType)\nRETURN z.label AS zone, z.shotValue AS shotValue, z.courtSide AS side,\n       z.distanceFromRimFt AS distanceFt, zt.label AS zoneType, p.label AS partOf,\n       collect(n.label) AS adjacentTo;",
+      "query_file": "queries/sparql/06-short-corner-geometry.rq"
+    },
+    {
+      "question": "What happens after the roll?",
+      "expected_intent": "sequence",
+      "expected_slots": {
+        "action": "pnr:s5-roll"
+      },
+      "parsed": {
+        "intent": "sequence",
+        "slots": {
+          "action": "pnr:s5-roll"
+        },
+        "confidence": 0.7,
+        "evidence": [
+          "rule:sequence matched /\\b(after|before|then what|what happens (after|ne.../",
+          "slot:action <- 'the roll' (pnr:s5-roll)"
+        ]
+      },
+      "rows_returned": 3,
+      "summary": "Roll to the rim: 1 predecessor(s), 1 successor(s)",
+      "graph_pattern": [
+        {
+          "s": "?step",
+          "p": "precedes",
+          "o": "?next"
+        },
+        {
+          "s": "?next",
+          "p": "hasActionType",
+          "o": "?actionType"
+        }
+      ],
+      "sparql": "PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>\nPREFIX bkr:  <https://w3id.org/basketball-kg/resource/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n\n# What happens before and after a given step.\nSELECT ?relation ?other ?otherLabel ?actionType\nWHERE {\n  FILTER(?step = <https://w3id.org/basketball-kg/resource/pnr/s5-roll>)\n  { ?step bk:precedes ?other . BIND(\"after\" AS ?relation) }\n  UNION { ?other bk:precedes ?step . BIND(\"before\" AS ?relation) }\n  OPTIONAL { ?other skos:prefLabel ?otherLabel }\n  OPTIONAL { ?other bk:hasActionType ?actionType }\n}\nORDER BY ?relation ?other",
+      "cypher": "// Before / after a step\nMATCH (s {id: 'pnr:s5-roll'})\nOPTIONAL MATCH (s)-[:PRECEDES]->(n)\nOPTIONAL MATCH (p)-[:PRECEDES]->(s)\nOPTIONAL MATCH (n)-[:HAS_ACTION_TYPE]->(nt:ActionType)\nOPTIONAL MATCH (p)-[:HAS_ACTION_TYPE]->(pt:ActionType)\nRETURN s.label AS step,\n       collect(DISTINCT {rel: 'before', label: p.label, type: pt.label}) AS before,\n       collect(DISTINCT {rel: 'after', label: n.label, type: nt.label}) AS after;",
+      "query_file": "queries/sparql/07-after-the-roll.rq"
+    },
+    {
+      "question": "What beats drop coverage?",
+      "expected_intent": "counters",
+      "expected_slots": {
+        "target": "coverage:drop"
+      },
+      "parsed": {
+        "intent": "counters",
+        "slots": {
+          "target": "coverage:drop"
+        },
+        "confidence": 0.8,
+        "evidence": [
+          "rule:counters matched /\\b(attack(s|ing)?|beat(s|ing|en)?|break(s|ing)?|.../",
+          "slot:target <- 'drop coverage' (coverage:drop)"
+        ]
+      },
+      "rows_returned": 2,
+      "summary": "2 tactical answer(s) to Drop",
+      "graph_pattern": [
+        {
+          "s": "?target",
+          "p": "hasCounter",
+          "o": "?counter"
+        },
+        {
+          "s": "?counter",
+          "p": "answers",
+          "o": "?target"
+        },
+        {
+          "s": "?counter",
+          "p": "exploits",
+          "o": "?weakness"
+        }
+      ],
+      "sparql": "PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>\nPREFIX bkr:  <https://w3id.org/basketball-kg/resource/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n\n# Every tactical answer to a scheme/coverage, plus the weakness it exploits.\nSELECT ?kind ?counter ?counterLabel ?vulnerability ?rationale ?effectiveness ?exploits\nWHERE {\n  FILTER(?target = <https://w3id.org/basketball-kg/resource/coverage/drop>)\n  {\n    ?target bk:hasCounter ?counter .\n  } UNION {\n    ?counter bk:answers ?target .\n  } UNION {\n    ?counter bk:exploits ?target .\n  }\n  ?counter skos:prefLabel ?counterLabel .\n  BIND(IF(EXISTS { ?counter a bk:Counter }, \"counter\", \"branch step\") AS ?kind)\n  OPTIONAL { ?counter bk:vulnerability ?vulnerability }\n  OPTIONAL { ?counter bk:rationale ?rationale }\n  OPTIONAL { ?counter bk:effectiveness ?effectiveness }\n  OPTIONAL { SELECT ?counter (GROUP_CONCAT(?weaknessLabel; SEPARATOR=\", \") AS ?exploits)\n            WHERE { ?counter bk:exploits/skos:prefLabel ?weaknessLabel }\n            GROUP BY ?counter }\n}\nGROUP BY ?kind ?counter ?counterLabel ?vulnerability ?rationale ?effectiveness\nORDER BY ?kind DESC(?effectiveness) ?counter",
+      "cypher": "// Tactical answers to a scheme or coverage\nMATCH (t {id: 'coverage:drop'})\nMATCH (c:Counter) WHERE (t)-[:HAS_COUNTER]->(c) OR (c)-[:ANSWERS]->(t) OR (c)-[:EXPLOITS]->(t)\nOPTIONAL MATCH (c)-[:EXPLOITS]->(w)\nRETURN c.label AS counter, c.vulnerability AS vulnerability, c.rationale AS rationale,\n       c.effectiveness AS effectiveness, collect(DISTINCT w.label) AS exploits\nORDER BY c.effectiveness DESC;",
+      "query_file": "queries/sparql/08-beating-drop-coverage.rq"
+    },
+    {
+      "question": "What kind of players does motion offence need?",
+      "expected_intent": "requirements",
+      "expected_slots": {
+        "target": "play:motion-offense"
+      },
+      "parsed": {
+        "intent": "requirements",
+        "slots": {
+          "target": "scheme:motion-offense"
+        },
+        "confidence": 0.7,
+        "evidence": [
+          "rule:requirements matched /\\b(what kind of|which archetype|what type of pla.../",
+          "slot:target <- 'motion offence' (scheme:motion-offense)"
+        ]
+      },
+      "rows_returned": 3,
+      "summary": "Motion Offence requires 3 archetype(s)/skill(s)",
+      "graph_pattern": [
+        {
+          "s": "?target",
+          "p": "requires",
+          "o": "?archetype"
+        },
+        {
+          "s": "?target",
+          "p": "hasStep",
+          "o": "?step"
+        },
+        {
+          "s": "?step",
+          "p": "requires",
+          "o": "?archetype"
+        },
+        {
+          "s": "?archetype",
+          "p": "requires",
+          "o": "?skill"
+        }
+      ],
+      "sparql": "PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>\nPREFIX bkr:  <https://w3id.org/basketball-kg/resource/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n\n# Archetypes and skills a scheme/play/action demands, rolled up from its steps.\nSELECT ?requirement ?reqLabel ?kind ?skills\nWHERE {\n  FILTER(?target = <https://w3id.org/basketball-kg/resource/scheme/motion-offense>)\n  { ?target bk:requires ?requirement }\n  UNION { ?target bk:hasStep ?step . ?step bk:requires ?requirement }\n  UNION { ?target bk:hasStep ?step . ?step bk:hasActionType ?type . ?type bk:requires ?requirement }\n  UNION { ?target bk:hasActionType ?type . ?type bk:requires ?requirement }\n  ?requirement skos:prefLabel ?reqLabel .\n  BIND(IF(EXISTS { ?requirement a bk:Archetype }, \"archetype\",\n       IF(EXISTS { ?requirement a bk:Skill }, \"skill\", \"other\")) AS ?kind)\n  OPTIONAL { SELECT ?requirement (GROUP_CONCAT(?skillLabel; SEPARATOR=\", \") AS ?skills)\n            WHERE { ?requirement bk:requires/skos:prefLabel ?skillLabel }\n            GROUP BY ?requirement }\n}\nGROUP BY ?requirement ?reqLabel ?kind\nORDER BY ?kind ?reqLabel",
+      "cypher": "// Archetypes and skills demanded by a scheme / play / action\nMATCH (t {id: 'scheme:motion-offense'})\nOPTIONAL MATCH (t)-[:REQUIRES]->(req)\nOPTIONAL MATCH (t)-[:HAS_STEP]->(s)-[:REQUIRES]->(req2)\nOPTIONAL MATCH (t)-[:HAS_STEP]->(s2)-[:HAS_ACTION_TYPE]->(at)-[:REQUIRES]->(req3)\nWITH collect(DISTINCT req) + collect(DISTINCT req2) + collect(DISTINCT req3) AS reqs\nUNWIND reqs AS requirement\nWITH DISTINCT requirement WHERE requirement IS NOT NULL\nOPTIONAL MATCH (requirement)-[:REQUIRES]->(skill)\nRETURN requirement.label AS requirement, labels(requirement) AS type, collect(skill.label) AS skills\nORDER BY type, requirement;",
+      "query_file": "queries/sparql/09-motion-offence-requirements.rq"
+    },
+    {
+      "question": "What should we run late in the shot clock?",
+      "expected_intent": "situations",
+      "expected_slots": {
+        "situation": "sit:late-clock"
+      },
+      "parsed": {
+        "intent": "situations",
+        "slots": {
+          "situation": "sit:late-clock"
+        },
+        "confidence": 0.7,
+        "evidence": [
+          "rule:situations matched /\\b(when (should|do|to)|situation(s)?|late clock|.../",
+          "slot:situation <- search 'Late shot clock' (sit:late-clock, score 1.312)"
+        ]
+      },
+      "rows_returned": 6,
+      "summary": "6 scheme(s)/play(s) apply in Late shot clock",
+      "graph_pattern": [
+        {
+          "s": "?scheme",
+          "p": "appliesIn",
+          "o": "?situation"
+        },
+        {
+          "s": "?scheme",
+          "p": "hasFormation",
+          "o": "?formation"
+        }
+      ],
+      "sparql": "PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>\nPREFIX bkr:  <https://w3id.org/basketball-kg/resource/>\nPREFIX skos: <http://www.w3.org/2004/02/skos/core#>\n\n# Schemes and plays used in a given game situation.\nSELECT ?scheme ?schemeLabel ?formation ?coverage\nWHERE {\n  ?scheme bk:appliesIn ?situation .\n  FILTER(?situation = <https://w3id.org/basketball-kg/resource/sit/late-clock>)\n  OPTIONAL { ?scheme skos:prefLabel ?schemeLabel }\n  OPTIONAL { ?scheme bk:hasFormation ?formation }\n  OPTIONAL { ?scheme bk:hasCoverage ?coverage }\n}\nORDER BY ?scheme",
+      "cypher": "// Schemes and plays used in a game situation\nMATCH (s)-[:APPLIES_IN]->(sit:Situation {id: 'sit:late-clock'})\nOPTIONAL MATCH (s)-[:HAS_FORMATION]->(f:Formation)\nOPTIONAL MATCH (s)-[:HAS_COVERAGE]->(c:Coverage)\nRETURN labels(s) AS kind, s.label AS scheme, f.label AS formation, c.label AS coverage\nORDER BY kind, scheme;",
+      "query_file": "queries/sparql/10-late-clock-options.rq"
+    }
+  ]
+}

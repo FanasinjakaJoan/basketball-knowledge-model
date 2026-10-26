@@ -1,0 +1,311 @@
+{
+  "@context": {
+    "@version": 1.1,
+    "@vocab": "https://w3id.org/basketball-kg/ontology#",
+    "abbreviation": {
+      "@id": "bk:abbreviation"
+    },
+    "actor": {
+      "@id": "bk:actor",
+      "@type": "@id"
+    },
+    "adjacentTo": {
+      "@id": "bk:adjacentTo",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "aliases": {
+      "@id": "bk:aliases",
+      "@container": "@set"
+    },
+    "altLabel": {
+      "@id": "http://www.w3.org/2004/02/skos/core#altLabel"
+    },
+    "answers": {
+      "@id": "bk:answers",
+      "@type": "@id"
+    },
+    "appliesIn": {
+      "@id": "bk:appliesIn",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "arch": "https://w3id.org/basketball-kg/resource/arch/",
+    "atype": "https://w3id.org/basketball-kg/resource/atype/",
+    "belongsToGroup": {
+      "@id": "bk:belongsToGroup",
+      "@type": "@id"
+    },
+    "bk": "https://w3id.org/basketball-kg/ontology#",
+    "bkr": "https://w3id.org/basketball-kg/resource/",
+    "coach": "https://w3id.org/basketball-kg/resource/coach/",
+    "coachesTeam": {
+      "@id": "bk:coachesTeam",
+      "@type": "@id"
+    },
+    "condition": {
+      "@id": "bk:condition",
+      "@type": "@id"
+    },
+    "confidence": {
+      "@id": "bk:confidence",
+      "@type": "xsd:decimal"
+    },
+    "constrainedBy": {
+      "@id": "bk:constrainedBy",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "counter": "https://w3id.org/basketball-kg/resource/counter/",
+    "counteredBy": {
+      "@id": "bk:counteredBy",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "courtSide": {
+      "@id": "bk:courtSide"
+    },
+    "courtX": {
+      "@id": "bk:courtX",
+      "@type": "xsd:decimal"
+    },
+    "courtY": {
+      "@id": "bk:courtY",
+      "@type": "xsd:decimal"
+    },
+    "coverage": "https://w3id.org/basketball-kg/resource/coverage/",
+    "coversZone": {
+      "@id": "bk:coversZone",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "defends": {
+      "@id": "bk:defends",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "definition": {
+      "@id": "http://www.w3.org/2004/02/skos/core#definition"
+    },
+    "distanceFromRimFt": {
+      "@id": "bk:distanceFromRimFt",
+      "@type": "xsd:decimal"
+    },
+    "endsIn": {
+      "@id": "bk:endsIn",
+      "@type": "@id"
+    },
+    "executes": {
+      "@id": "bk:executes",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "exploits": {
+      "@id": "bk:exploits",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "form": "https://w3id.org/basketball-kg/resource/form/",
+    "governs": {
+      "@id": "bk:governs",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "hasActionType": {
+      "@id": "bk:hasActionType",
+      "@type": "@id"
+    },
+    "hasArchetype": {
+      "@id": "bk:hasArchetype",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "hasAssignment": {
+      "@id": "bk:hasAssignment",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "hasCounter": {
+      "@id": "bk:hasCounter",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "hasCoverage": {
+      "@id": "bk:hasCoverage",
+      "@type": "@id"
+    },
+    "hasDecision": {
+      "@id": "bk:hasDecision",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "hasFormation": {
+      "@id": "bk:hasFormation",
+      "@type": "@id"
+    },
+    "hasPenalty": {
+      "@id": "bk:hasPenalty",
+      "@type": "@id"
+    },
+    "hasRole": {
+      "@id": "bk:hasRole",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "hasRuleType": {
+      "@id": "bk:hasRuleType",
+      "@type": "@id"
+    },
+    "hasStep": {
+      "@id": "bk:hasStep",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "hasZoneType": {
+      "@id": "bk:hasZoneType",
+      "@type": "@id"
+    },
+    "heldBy": {
+      "@id": "bk:heldBy",
+      "@type": "@id"
+    },
+    "id": "@id",
+    "illustrative": {
+      "@id": "bk:illustrative",
+      "@type": "xsd:boolean"
+    },
+    "installs": {
+      "@id": "bk:installs",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "key": {
+      "@id": "bk:key",
+      "@container": "@set"
+    },
+    "label": {
+      "@id": "http://www.w3.org/2004/02/skos/core#prefLabel"
+    },
+    "mot": "https://w3id.org/basketball-kg/resource/mot/",
+    "note": {
+      "@id": "bk:note"
+    },
+    "occupiesPosition": {
+      "@id": "bk:occupiesPosition",
+      "@type": "@id"
+    },
+    "occursIn": {
+      "@id": "bk:occursIn",
+      "@type": "@id"
+    },
+    "ofScheme": {
+      "@id": "bk:ofScheme",
+      "@type": "@id"
+    },
+    "order": {
+      "@id": "bk:order",
+      "@type": "xsd:integer"
+    },
+    "outcome": "https://w3id.org/basketball-kg/resource/outcome/",
+    "partOf": {
+      "@id": "bk:partOf",
+      "@type": "@id"
+    },
+    "penalty": "https://w3id.org/basketball-kg/resource/penalty/",
+    "penaltyText": {
+      "@id": "bk:penaltyText"
+    },
+    "pgroup": "https://w3id.org/basketball-kg/resource/pgroup/",
+    "play": "https://w3id.org/basketball-kg/resource/play/",
+    "player": "https://w3id.org/basketball-kg/resource/player/",
+    "playsFor": {
+      "@id": "bk:playsFor",
+      "@type": "@id"
+    },
+    "pnr": "https://w3id.org/basketball-kg/resource/pnr/",
+    "pos": "https://w3id.org/basketball-kg/resource/pos/",
+    "precedes": {
+      "@id": "bk:precedes",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "produces": {
+      "@id": "bk:produces",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "rationale": {
+      "@id": "bk:rationale"
+    },
+    "relatedTo": {
+      "@id": "bk:relatedTo",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "requires": {
+      "@id": "bk:requires",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "role": "https://w3id.org/basketball-kg/resource/role/",
+    "rule": "https://w3id.org/basketball-kg/resource/rule/",
+    "ruletype": "https://w3id.org/basketball-kg/resource/ruletype/",
+    "scheme": "https://w3id.org/basketball-kg/resource/scheme/",
+    "selectedOption": {
+      "@id": "bk:selectedOption",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "severity": {
+      "@id": "bk:severity"
+    },
+    "shotValue": {
+      "@id": "bk:shotValue",
+      "@type": "xsd:integer"
+    },
+    "sit": "https://w3id.org/basketball-kg/resource/sit/",
+    "skill": "https://w3id.org/basketball-kg/resource/skill/",
+    "source": {
+      "@id": "bk:source"
+    },
+    "startsIn": {
+      "@id": "bk:startsIn",
+      "@type": "@id"
+    },
+    "stepOf": {
+      "@id": "bk:stepOf",
+      "@type": "@id"
+    },
+    "strongAgainst": {
+      "@id": "bk:strongAgainst",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "target": {
+      "@id": "bk:target",
+      "@type": "@id"
+    },
+    "team": "https://w3id.org/basketball-kg/resource/team/",
+    "threshold": {
+      "@id": "bk:threshold"
+    },
+    "type": "@type",
+    "typicalPosition": {
+      "@id": "bk:typicalPosition",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "vulnerability": {
+      "@id": "bk:vulnerability"
+    },
+    "vulnerableTo": {
+      "@id": "bk:vulnerableTo",
+      "@type": "@id",
+      "@container": "@set"
+    },
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "z23": "https://w3id.org/basketball-kg/resource/z23/",
+    "zone": "https://w3id.org/basketball-kg/resource/zone/",
+    "zonetype": "https://w3id.org/basketball-kg/resource/zonetype/"
+  }
+}

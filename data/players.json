@@ -1,0 +1,109 @@
+{
+  "id": "dataset:players",
+  "label": "Illustrative rosters",
+  "definition": "A small, entirely ILLUSTRATIVE roster used to demonstrate roster-fit and matchup queries. Players are fictional; the archetype exemplars attached to archetype nodes in data/positions.json are editorial examples only. No statistics, contracts or scouting grades are asserted.",
+  "props": { "illustrative": true },
+  "nodes": [
+    { "id": "team:harbour", "type": "Team", "label": "Harbour", "definition": "Illustrative team. Identity: switchable, five-out offence, aggressive ball-screen defence.", "props": { "illustrative": true } },
+    { "id": "team:highland", "type": "Team", "label": "Highland", "definition": "Illustrative team. Identity: hub-based offence from the elbow, drop coverage at the back.", "props": { "illustrative": true } },
+
+    {
+      "id": "coach:miles",
+      "type": "Coach",
+      "label": "Renata Miles",
+      "definition": "Illustrative head coach of Harbour.",
+      "props": { "illustrative": true, "note": "Prefers switchable lineups and five-out spacing." },
+      "edges": { "coachesTeam": "team:harbour", "installs": ["scheme:switch-all", "scheme:motion-offense", "scheme:five-out"] }
+    },
+    {
+      "id": "coach:oyelaran",
+      "type": "Coach",
+      "label": "Tunde Oyelaran",
+      "definition": "Illustrative head coach of Highland.",
+      "props": { "illustrative": true, "note": "Builds everything around an elbow hub and a drop-coverage anchor." },
+      "edges": { "coachesTeam": "team:highland", "installs": ["scheme:zone-2-3", "scheme:horns", "scheme:pick-and-roll"] }
+    },
+
+    {
+      "id": "player:harbour-1",
+      "type": "Player",
+      "label": "Andre Vega",
+      "definition": "Illustrative primary initiator: runs the majority of the team's ball screens.",
+      "props": { "illustrative": true, "shirtNumber": 4 },
+      "edges": { "playsFor": "team:harbour", "occupiesPosition": "pos:point-guard", "hasArchetype": ["arch:pick-and-roll-initiator"], "hasRole": ["role:initiator", "role:ball-handler"], "executes": ["atype:set-on-ball-screen"] }
+    },
+    {
+      "id": "player:harbour-2",
+      "type": "Player",
+      "label": "Marcus Ide",
+      "definition": "Illustrative movement shooter who occupies the corners and relocates on the drive.",
+      "props": { "illustrative": true, "shirtNumber": 8 },
+      "edges": { "playsFor": "team:harbour", "occupiesPosition": "pos:shooting-guard", "hasArchetype": ["arch:off-ball-sharpshooter"], "hasRole": ["role:spot-up-shooter", "role:off-ball-mover"] }
+    },
+    {
+      "id": "player:harbour-3",
+      "type": "Player",
+      "label": "Tobias Lund",
+      "definition": "Illustrative 3-and-D wing who takes the opponent's best perimeter scorer.",
+      "props": { "illustrative": true, "shirtNumber": 15 },
+      "edges": { "playsFor": "team:harbour", "occupiesPosition": "pos:small-forward", "hasArchetype": ["arch:three-and-d-wing", "arch:switchable-defender"], "hasRole": ["role:perimeter-stopper", "role:spot-up-shooter"], "defends": ["player:highland-1"] }
+    },
+    {
+      "id": "player:harbour-4",
+      "type": "Player",
+      "label": "Noah Ayres",
+      "definition": "Illustrative stretch four whose shooting is the reason the team can run five-out.",
+      "props": { "illustrative": true, "shirtNumber": 22 },
+      "edges": { "playsFor": "team:harbour", "occupiesPosition": "pos:power-forward", "hasArchetype": ["arch:spacing-big"], "hasRole": ["role:stretch-big", "role:pop-man"] }
+    },
+    {
+      "id": "player:harbour-5",
+      "type": "Player",
+      "label": "Ibrahim Kaya",
+      "definition": "Illustrative anchor who protects the rim and screens; the last line of a switch-everything scheme.",
+      "props": { "illustrative": true, "shirtNumber": 33 },
+      "edges": { "playsFor": "team:harbour", "occupiesPosition": "pos:center", "hasArchetype": ["arch:rim-protector", "arch:rim-running-big"], "hasRole": ["role:rim-protector", "role:screener", "role:roll-man"] }
+    },
+
+    {
+      "id": "player:highland-1",
+      "type": "Player",
+      "label": "Diego Ferran",
+      "definition": "Illustrative shot-making initiator who punishes drop coverage with the pull-up three.",
+      "props": { "illustrative": true, "shirtNumber": 3 },
+      "edges": { "playsFor": "team:highland", "occupiesPosition": "pos:point-guard", "hasArchetype": ["arch:pull-up-shooter", "arch:pick-and-roll-initiator"], "hasRole": ["role:ball-handler"] }
+    },
+    {
+      "id": "player:highland-2",
+      "type": "Player",
+      "label": "Kwame Osei",
+      "definition": "Illustrative secondary creator who runs the second action off the hub.",
+      "props": { "illustrative": true, "shirtNumber": 7 },
+      "edges": { "playsFor": "team:highland", "occupiesPosition": "pos:shooting-guard", "hasArchetype": ["arch:secondary-creator"], "hasRole": ["role:connector"] }
+    },
+    {
+      "id": "player:highland-3",
+      "type": "Player",
+      "label": "Luka Berg",
+      "definition": "Illustrative slasher who attacks closeouts and forces the collapse that feeds the corner.",
+      "props": { "illustrative": true, "shirtNumber": 11 },
+      "edges": { "playsFor": "team:highland", "occupiesPosition": "pos:small-forward", "hasArchetype": ["arch:slasher"], "hasRole": ["role:off-ball-mover"] }
+    },
+    {
+      "id": "player:highland-4",
+      "type": "Player",
+      "label": "Sam Whitlow",
+      "definition": "Illustrative switchable forward, the connective defender of the scheme.",
+      "props": { "illustrative": true, "shirtNumber": 21 },
+      "edges": { "playsFor": "team:highland", "occupiesPosition": "pos:power-forward", "hasArchetype": ["arch:switchable-defender", "arch:help-side-roamer"], "hasRole": ["role:switchable-defender", "role:help-defender"] }
+    },
+    {
+      "id": "player:highland-5",
+      "type": "Player",
+      "label": "Emil Novak",
+      "definition": "Illustrative hub big who receives at the elbow and re-distributes; also the drop-coverage anchor.",
+      "props": { "illustrative": true, "shirtNumber": 44 },
+      "edges": { "playsFor": "team:highland", "occupiesPosition": "pos:center", "hasArchetype": ["arch:hub-playmaker", "arch:drop-big", "arch:short-roll-passer"], "hasRole": ["role:hub", "role:screener", "role:roll-man"] }
+    }
+  ]
+}

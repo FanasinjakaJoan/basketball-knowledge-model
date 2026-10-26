@@ -1,0 +1,23 @@
+# Basketball Knowledge Model -- example query
+# question : Which players fit a switch-everything scheme?
+# intent   : fit
+# slots    : scheme=scheme:switch-all
+# note     : Joins the scheme's archetype requirements against player archetypes.
+# generated: python scripts/gen_queries.py (do not edit by hand)
+PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>
+PREFIX bkr:  <https://w3id.org/basketball-kg/resource/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+# Which players carry the archetypes a scheme requires.
+SELECT ?player ?playerLabel ?team ?position ?archetype
+WHERE {
+  ?scheme bk:requires ?archetype .
+  FILTER(?scheme = <https://w3id.org/basketball-kg/resource/scheme/switch-all>)
+  ?player a bk:Player ;
+          bk:hasArchetype ?archetype .
+  OPTIONAL { ?player skos:prefLabel ?playerLabel }
+  OPTIONAL { ?player bk:playsFor ?team }
+  OPTIONAL { ?player bk:occupiesPosition ?position }
+
+}
+ORDER BY ?playerLabel ?archetype

@@ -1,0 +1,261 @@
+{
+  "id": "dataset:court",
+  "label": "Half-court zone model",
+  "definition": "A 17-cell decomposition of the offensive half court plus two aggregate areas. Coordinates use feet on a 50ft x 47ft half court: x = 0 at the LEFT sideline (as seen from the baseline looking up court), y = 0 at the baseline, y increasing towards half court. Rim centre = (25.0, 5.25). Values are teaching approximations, not survey data.",
+  "coordinates": {
+    "system": "half-court cartesian, feet, origin at baseline/left-sideline corner",
+    "courtWidthFt": 50,
+    "courtLengthFt": 47,
+    "rimFt": [25.0, 5.25],
+    "threePointArcFt": 23.75,
+    "threePointCornerFt": 22.0,
+    "laneWidthFt": 16,
+    "freeThrowLineY": 19.0
+  },
+  "nodes": [
+    {
+      "id": "zone:frontcourt",
+      "type": "Zone",
+      "label": "Frontcourt",
+      "definition": "The offensive half of the court, from the baseline to the half-court line.",
+      "props": { "courtSide": "center", "shotValue": 0 }
+    },
+    {
+      "id": "zone:backcourt",
+      "type": "Zone",
+      "label": "Backcourt",
+      "definition": "The defensive half of the court; the ball must cross the half-court line within 8 seconds.",
+      "props": { "courtSide": "center", "shotValue": 0, "courtX": 25.0, "courtY": 38.0, "distanceFromRimFt": 33.0 },
+      "edges": { "adjacentTo": ["zone:top-of-key-three", "zone:wing-three-left", "zone:wing-three-right"] }
+    },
+
+    {
+      "id": "zone:restricted-area",
+      "type": "Zone",
+      "label": "Restricted Area (Rim)",
+      "definition": "The 4ft arc under the basket. A defender inside it cannot draw an offensive charge; it is also the finishing target of every roll, cut and drive.",
+      "props": {
+        "courtSide": "center",
+        "shotValue": 2,
+        "courtX": 25.0,
+        "courtY": 7.5,
+        "distanceFromRimFt": 2.5,
+        "aliases": ["rim", "cup", "the cylinder", "RA"]
+      },
+      "edges": {
+        "hasZoneType": "zonetype:paint",
+        "partOf": "zone:paint",
+        "adjacentTo": ["zone:paint", "zone:low-post-left", "zone:low-post-right"]
+      }
+    },
+    {
+      "id": "zone:paint",
+      "type": "Zone",
+      "label": "Paint (Lane)",
+      "definition": "The 16ft-wide lane from the baseline to the free-throw line. Home of the roll man, the offensive three-second rule and help-side defence.",
+      "props": {
+        "courtSide": "center",
+        "shotValue": 2,
+        "courtX": 25.0,
+        "courtY": 12.0,
+        "distanceFromRimFt": 7.0,
+        "aliases": ["lane", "key"]
+      },
+      "edges": {
+        "hasZoneType": "zonetype:paint",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": [
+          "zone:restricted-area",
+          "zone:low-post-left",
+          "zone:low-post-right",
+          "zone:short-corner-left",
+          "zone:short-corner-right",
+          "zone:elbow-left",
+          "zone:elbow-right",
+          "zone:high-post"
+        ]
+      }
+    },
+    {
+      "id": "zone:low-post-left",
+      "type": "Zone",
+      "label": "Left Low Post (Block)",
+      "definition": "The left block area beside the lane, the classic post-up and duck-in spot.",
+      "props": { "courtSide": "left", "shotValue": 2, "courtX": 19.5, "courtY": 10.5, "distanceFromRimFt": 8.0 },
+      "edges": {
+        "hasZoneType": "zonetype:post",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:restricted-area", "zone:paint", "zone:short-corner-left", "zone:elbow-left", "zone:midrange-left-wing"]
+      }
+    },
+    {
+      "id": "zone:low-post-right",
+      "type": "Zone",
+      "label": "Right Low Post (Block)",
+      "definition": "The right block area beside the lane, the classic post-up and duck-in spot.",
+      "props": { "courtSide": "right", "shotValue": 2, "courtX": 30.5, "courtY": 10.5, "distanceFromRimFt": 8.0 },
+      "edges": {
+        "hasZoneType": "zonetype:post",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:restricted-area", "zone:paint", "zone:short-corner-right", "zone:elbow-right", "zone:midrange-right-wing"]
+      }
+    },
+    {
+      "id": "zone:short-corner-left",
+      "type": "Zone",
+      "label": "Left Short Corner",
+      "definition": "Baseline area between the block and the corner three, ~14-16ft from the rim. The dead spot of most zone defences and the bail-out against hard traps.",
+      "props": { "courtSide": "left", "shotValue": 2, "courtX": 8.0, "courtY": 12.0, "distanceFromRimFt": 15.0, "aliases": ["deep corner", "baseline short corner"] },
+      "edges": {
+        "hasZoneType": "zonetype:midrange",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:paint", "zone:low-post-left", "zone:corner-three-left", "zone:midrange-left-wing"]
+      }
+    },
+    {
+      "id": "zone:short-corner-right",
+      "type": "Zone",
+      "label": "Right Short Corner",
+      "definition": "Baseline area between the block and the corner three, ~14-16ft from the rim. The dead spot of most zone defences and the bail-out against hard traps.",
+      "props": { "courtSide": "right", "shotValue": 2, "courtX": 42.0, "courtY": 12.0, "distanceFromRimFt": 15.0, "aliases": ["deep corner", "baseline short corner"] },
+      "edges": {
+        "hasZoneType": "zonetype:midrange",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:paint", "zone:low-post-right", "zone:corner-three-right", "zone:midrange-right-wing"]
+      }
+    },
+    {
+      "id": "zone:elbow-left",
+      "type": "Zone",
+      "label": "Left Elbow",
+      "definition": "The intersection of the free-throw line and the left lane line extended; the hub spot of Horns, the high-post split and the short-roll catch.",
+      "props": { "courtSide": "left", "shotValue": 2, "courtX": 17.0, "courtY": 19.0, "distanceFromRimFt": 15.0 },
+      "edges": {
+        "hasZoneType": "zonetype:midrange",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:paint", "zone:high-post", "zone:low-post-left", "zone:midrange-left-wing"]
+      }
+    },
+    {
+      "id": "zone:elbow-right",
+      "type": "Zone",
+      "label": "Right Elbow",
+      "definition": "The intersection of the free-throw line and the right lane line extended; the hub spot of Horns, the high-post split and the short-roll catch.",
+      "props": { "courtSide": "right", "shotValue": 2, "courtX": 33.0, "courtY": 19.0, "distanceFromRimFt": 15.0 },
+      "edges": {
+        "hasZoneType": "zonetype:midrange",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:paint", "zone:high-post", "zone:low-post-right", "zone:midrange-right-wing"]
+      }
+    },
+    {
+      "id": "zone:high-post",
+      "type": "Zone",
+      "label": "High Post (Free-Throw Line)",
+      "definition": "The free-throw line area, often called 'the hole' of a 2-3 zone or 'the middle'. Catching here splits a zone and forces the bottom defenders to choose.",
+      "props": { "courtSide": "center", "shotValue": 2, "courtX": 25.0, "courtY": 20.0, "distanceFromRimFt": 15.0, "aliases": ["the hole", "nail (extended)", "FT line"] },
+      "edges": {
+        "hasZoneType": "zonetype:midrange",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": [
+          "zone:paint",
+          "zone:elbow-left",
+          "zone:elbow-right",
+          "zone:midrange-left-wing",
+          "zone:midrange-right-wing",
+          "zone:top-of-key-three"
+        ]
+      }
+    },
+    {
+      "id": "zone:midrange-left-wing",
+      "type": "Zone",
+      "label": "Left Wing (Mid-Range)",
+      "definition": "Left side of the floor above the short corner and outside the elbow; the ball-side entry against a zone and the landing spot after a screen.",
+      "props": { "courtSide": "left", "shotValue": 2, "courtX": 10.0, "courtY": 22.0, "distanceFromRimFt": 20.0 },
+      "edges": {
+        "hasZoneType": "zonetype:midrange",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:elbow-left", "zone:short-corner-left", "zone:low-post-left", "zone:wing-three-left", "zone:corner-three-left"]
+      }
+    },
+    {
+      "id": "zone:midrange-right-wing",
+      "type": "Zone",
+      "label": "Right Wing (Mid-Range)",
+      "definition": "Right side of the floor above the short corner and outside the elbow; the ball-side entry against a zone and the landing spot after a screen.",
+      "props": { "courtSide": "right", "shotValue": 2, "courtX": 40.0, "courtY": 22.0, "distanceFromRimFt": 20.0 },
+      "edges": {
+        "hasZoneType": "zonetype:midrange",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:elbow-right", "zone:short-corner-right", "zone:low-post-right", "zone:wing-three-right", "zone:corner-three-right"]
+      }
+    },
+    {
+      "id": "zone:corner-three-left",
+      "type": "Zone",
+      "label": "Left Corner Three",
+      "definition": "The shortest three on the floor (22ft). The highest-value shot in the modern game and the natural bail-out against help, traps and zone rotations.",
+      "props": { "courtSide": "left", "shotValue": 3, "courtX": 4.5, "courtY": 6.0, "distanceFromRimFt": 22.0 },
+      "edges": {
+        "hasZoneType": "zonetype:three-point",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:short-corner-left", "zone:midrange-left-wing", "zone:wing-three-left"]
+      }
+    },
+    {
+      "id": "zone:corner-three-right",
+      "type": "Zone",
+      "label": "Right Corner Three",
+      "definition": "The shortest three on the floor (22ft). The highest-value shot in the modern game and the natural bail-out against help, traps and zone rotations.",
+      "props": { "courtSide": "right", "shotValue": 3, "courtX": 45.5, "courtY": 6.0, "distanceFromRimFt": 22.0 },
+      "edges": {
+        "hasZoneType": "zonetype:three-point",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:short-corner-right", "zone:midrange-right-wing", "zone:wing-three-right"]
+      }
+    },
+    {
+      "id": "zone:wing-three-left",
+      "type": "Zone",
+      "label": "Left Wing Three (Above the Break)",
+      "definition": "Above-the-break three on the left wing; the relocation spot after a drive-and-kick and the primary skip-pass target.",
+      "props": { "courtSide": "left", "shotValue": 3, "courtX": 8.0, "courtY": 25.0, "distanceFromRimFt": 23.75 },
+      "edges": {
+        "hasZoneType": "zonetype:three-point",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:midrange-left-wing", "zone:corner-three-left", "zone:top-of-key-three", "zone:backcourt"]
+      }
+    },
+    {
+      "id": "zone:wing-three-right",
+      "type": "Zone",
+      "label": "Right Wing Three (Above the Break)",
+      "definition": "Above-the-break three on the right wing; the relocation spot after a drive-and-kick and the primary skip-pass target.",
+      "props": { "courtSide": "right", "shotValue": 3, "courtX": 42.0, "courtY": 25.0, "distanceFromRimFt": 23.75 },
+      "edges": {
+        "hasZoneType": "zonetype:three-point",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:midrange-right-wing", "zone:corner-three-right", "zone:top-of-key-three", "zone:backcourt"]
+      }
+    },
+    {
+      "id": "zone:top-of-key-three",
+      "type": "Zone",
+      "label": "Top of Key Three",
+      "definition": "Above-the-break three at the top of the floor; the launch point of most ball screens, hand-offs and pull-ups.",
+      "props": { "courtSide": "center", "shotValue": 3, "courtX": 25.0, "courtY": 28.0, "distanceFromRimFt": 23.75, "aliases": ["up top", "the point"] },
+      "edges": {
+        "hasZoneType": "zonetype:three-point",
+        "partOf": "zone:frontcourt",
+        "adjacentTo": ["zone:wing-three-left", "zone:wing-three-right", "zone:high-post", "zone:backcourt"]
+      }
+    },
+
+    { "id": "zonetype:paint", "type": "ZoneType", "label": "Paint", "definition": "Inside the 16ft lane, including the restricted area." },
+    { "id": "zonetype:post", "type": "ZoneType", "label": "Post", "definition": "Block and low-block areas used for post-ups and duck-ins." },
+    { "id": "zonetype:midrange", "type": "ZoneType", "label": "Mid-Range", "definition": "Inside the arc, outside the lane: elbows, short corners, wings, high post." },
+    { "id": "zonetype:three-point", "type": "ZoneType", "label": "Three-Point", "definition": "Beyond the 23ft 9in arc (22ft in the corners)." },
+    { "id": "zonetype:backcourt", "type": "ZoneType", "label": "Backcourt", "definition": "Behind the half-court line." }
+  ]
+}

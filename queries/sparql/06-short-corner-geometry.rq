@@ -1,0 +1,20 @@
+# Basketball Knowledge Model -- example query
+# question : What is next to the short corner?
+# intent   : spatial
+# slots    : zone=zone:short-corner-left
+# note     : Adjacency is the 'one pass away' relation used for spacing and zone rotation.
+# generated: python scripts/gen_queries.py (do not edit by hand)
+PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>
+PREFIX bkr:  <https://w3id.org/basketball-kg/resource/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+# Spatial neighbourhood of a zone: containment, adjacency and shot value.
+SELECT ?zone ?zoneLabel ?zoneType ?partOf ?shotValue ?neighbour ?neighbourValue
+WHERE {
+  FILTER(?zone = <https://w3id.org/basketball-kg/resource/zone/short-corner-left>)
+  OPTIONAL { ?zone skos:prefLabel ?zoneLabel }
+  OPTIONAL { ?zone bk:hasZoneType ?zoneType }
+  OPTIONAL { ?zone bk:partOf ?partOf }
+  OPTIONAL { ?zone bk:shotValue ?shotValue }
+  OPTIONAL { ?zone bk:adjacentTo ?neighbour . OPTIONAL { ?neighbour bk:shotValue ?neighbourValue } }
+}

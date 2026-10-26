@@ -1,0 +1,26 @@
+# Basketball Knowledge Model -- example query
+# question : Walk me through the pick and roll.
+# intent   : play_steps
+# slots    : play=play:pick-and-roll
+# note     : Ordered action graph: who does what, where, under which constraint.
+# generated: python scripts/gen_queries.py (do not edit by hand)
+PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>
+PREFIX bkr:  <https://w3id.org/basketball-kg/resource/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+# Ordered steps of a play, with actor, action type and the zones it moves through.
+SELECT ?order ?step ?stepLabel ?actionType ?actor ?fromZone ?toZone ?next
+WHERE {
+  ?play bk:hasStep ?step .
+  FILTER(?play = <https://w3id.org/basketball-kg/resource/play/pick-and-roll>)
+  ?step skos:prefLabel ?stepLabel .
+  OPTIONAL { ?step bk:order ?order }
+  OPTIONAL { ?step bk:hasActionType ?actionType }
+  OPTIONAL { ?step bk:actor ?actor }
+  OPTIONAL { ?step bk:startsIn ?fromZone }
+  OPTIONAL { ?step bk:endsIn ?toZone }
+  OPTIONAL { SELECT ?step (GROUP_CONCAT(?nextLabel; SEPARATOR=", ") AS ?next)
+            WHERE { ?step bk:precedes/skos:prefLabel ?nextLabel }
+            GROUP BY ?step }
+}
+ORDER BY ?order

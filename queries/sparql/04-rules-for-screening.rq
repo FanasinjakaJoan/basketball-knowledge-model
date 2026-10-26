@@ -1,0 +1,25 @@
+# Basketball Knowledge Model -- example query
+# question : What rules govern setting a screen?
+# intent   : rules
+# slots    : target=atype:set-on-ball-screen
+# note     : Rules attach to action *types*, so every screening action inherits them.
+# generated: python scripts/gen_queries.py (do not edit by hand)
+PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>
+PREFIX bkr:  <https://w3id.org/basketball-kg/resource/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+# Rules that constrain a target directly, through its steps, or through its action types.
+SELECT DISTINCT ?rule ?ruleLabel ?ruleType ?threshold ?penaltyText
+WHERE {
+  FILTER(?target = <https://w3id.org/basketball-kg/resource/atype/set-on-ball-screen>)
+  { ?target bk:constrainedBy ?rule }
+  UNION { ?rule bk:governs ?target }
+  UNION { ?target bk:hasStep ?step . ?step bk:constrainedBy ?rule }
+  UNION { ?target bk:hasStep ?step . ?step bk:hasActionType ?type . ?type bk:constrainedBy ?rule }
+  UNION { ?target bk:hasActionType ?type . ?type bk:constrainedBy ?rule }
+  ?rule skos:prefLabel ?ruleLabel .
+  OPTIONAL { ?rule bk:hasRuleType ?ruleType }
+  OPTIONAL { ?rule bk:threshold ?threshold }
+  OPTIONAL { ?rule bk:penaltyText ?penaltyText }
+}
+ORDER BY ?rule

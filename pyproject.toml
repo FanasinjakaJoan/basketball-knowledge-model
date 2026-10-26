@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "basketball-knowledge-model"
+version = "0.1.0"
+description = "A queryable knowledge graph of basketball tactics: positions, roles, archetypes, court zones, schemes, play graphs, coverages, situations and the rules that constrain them."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Fanasinjaka Joan" }]
+requires-python = ">=3.9"
+dependencies = ["rdflib>=7.0", "networkx>=3.0", "PyYAML>=6.0"]
+
+[project.urls]
+Homepage = "https://github.com/FanasinjakaJoan/basketball-knowledge-model"
+Repository = "https://github.com/FanasinjakaJoan/basketball-knowledge-model"
+
+[project.scripts]
+basketball-kg = "basketball_kg.cli:main"
+
+[tool.setuptools]
+packages = ["basketball_kg"]
+
+[tool.setuptools.package-data]
+basketball_kg = ["py.typed"]

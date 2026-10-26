@@ -1,0 +1,32 @@
+# Basketball Knowledge Model -- example query
+# question : What beats drop coverage?
+# intent   : counters
+# slots    : target=coverage:drop
+# note     : The branch steps of the pick-and-roll read the same coverage vocabulary.
+# generated: python scripts/gen_queries.py (do not edit by hand)
+PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>
+PREFIX bkr:  <https://w3id.org/basketball-kg/resource/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+# Every tactical answer to a scheme/coverage, plus the weakness it exploits.
+SELECT ?kind ?counter ?counterLabel ?vulnerability ?rationale ?effectiveness ?exploits
+WHERE {
+  FILTER(?target = <https://w3id.org/basketball-kg/resource/coverage/drop>)
+  {
+    ?target bk:hasCounter ?counter .
+  } UNION {
+    ?counter bk:answers ?target .
+  } UNION {
+    ?counter bk:exploits ?target .
+  }
+  ?counter skos:prefLabel ?counterLabel .
+  BIND(IF(EXISTS { ?counter a bk:Counter }, "counter", "branch step") AS ?kind)
+  OPTIONAL { ?counter bk:vulnerability ?vulnerability }
+  OPTIONAL { ?counter bk:rationale ?rationale }
+  OPTIONAL { ?counter bk:effectiveness ?effectiveness }
+  OPTIONAL { SELECT ?counter (GROUP_CONCAT(?weaknessLabel; SEPARATOR=", ") AS ?exploits)
+            WHERE { ?counter bk:exploits/skos:prefLabel ?weaknessLabel }
+            GROUP BY ?counter }
+}
+GROUP BY ?kind ?counter ?counterLabel ?vulnerability ?rationale ?effectiveness
+ORDER BY ?kind DESC(?effectiveness) ?counter

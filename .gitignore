@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Generated artefacts (reproduce with the CLI, do not commit)
+*.dot
+*.ttl
+*.jsonld
+# …but the ontology itself is source, not an artefact: it is hand-authored and
+# read by rdf.py / model.py / scripts/gen_ontology_docs.py
+!ontology/basketball.jsonld
+!ontology/basketball.ttl
+*.png
+*.svg
+exports/
+out/
+
+# Editors / OS
+.idea/
+.vscode/
+*.swp
+.DS_Store
+Thumbs.db

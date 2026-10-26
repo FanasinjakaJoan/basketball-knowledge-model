@@ -1,0 +1,376 @@
+{
+  "id": "dataset:play-pick-and-roll",
+  "label": "Pick and Roll - the two-on-two that becomes five-on-five",
+  "definition": "The canonical ball-screen action. A ball handler and a screener combine against two defenders; the offence's job is to convert that two-on-two advantage into an advantage for all five by reading the coverage and attacking the resulting weakness. Modelled here as an ordered action graph with a single decision node branching on the coverage.",
+  "props": {
+    "formation": "4-out-1-in (equally playable from 5-out)",
+    "side": "middle ball screen at the top of the key (side screens enable ICE; middle screens do not)",
+    "key": [
+      "The screen angle decides the action: set it on the defender's shoulder, not his hip",
+      "Come off shoulder-to-hip: separation is created by the screener's body, not by speed",
+      "The roll is a weapon even when never passed to: it occupies the rim protector",
+      "Two corners filled and a weak-side lift punish every rotation",
+      "Second-side actions are usually better than the first: the defence is scrambled after the first pass out"
+    ]
+  },
+  "nodes": [
+    {
+      "id": "play:pick-and-roll",
+      "type": "OffensivePlay",
+      "label": "Pick and Roll",
+      "definition": "A ball screen and the read that follows it.",
+      "props": { "aliases": ["ball screen", "PnR", "on-ball screen"], "shotClockBudgetSeconds": 10 },
+      "edges": {
+        "hasFormation": "form:four-out-one-in",
+        "appliesIn": ["sit:half-court", "sit:early-offense", "sit:late-clock", "sit:ato", "sit:clutch"],
+        "requires": ["arch:pick-and-roll-initiator", "arch:rim-running-big"],
+        "produces": ["outcome:rim-attempt", "outcome:lob-dunk", "outcome:corner-three", "outcome:above-break-three", "outcome:mismatch-created", "outcome:foul-drawn"],
+        "hasCounter": ["counter:switch-vs-pnr", "counter:blitz-vs-pnr", "counter:ice-vs-pnr", "counter:physicality-vs-motion"],
+        "relatedTo": ["scheme:pick-and-roll", "scheme:spain-pick-and-roll", "scheme:horns"]
+      }
+    },
+
+    {
+      "id": "pnr:s1-spacing",
+      "type": "Action",
+      "label": "Establish spacing: 4-out-1-in, both corners filled",
+      "definition": "Before the action begins, occupy the five spots: ball handler at the top, big at the elbow or dunker spot, shooters in both corners and on the weak-side wing.",
+      "props": { "order": 1, "participants": "all five offenders", "key": ["The corner shooter is not decoration: he is the punishment for the tag", "Nobody may stand inside the arc except the dive man"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:spacing",
+        "actor": "role:off-ball-mover",
+        "occursIn": "zone:frontcourt",
+        "constrainedBy": ["rule:shot-clock-24", "rule:three-point-distance"],
+        "precedes": ["pnr:s2-align"]
+      }
+    },
+    {
+      "id": "pnr:s2-align",
+      "type": "Action",
+      "label": "Set up the screen angle",
+      "definition": "The ball handler drifts and attacks the defender's inside shoulder, driving him onto the arriving screener so the screen lands on the defender's path rather than behind it.",
+      "props": { "order": 2, "key": ["A screen on the wrong shoulder is just traffic", "Change of pace: get the defender moving before the screen arrives"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:align-angle",
+        "actor": "role:ball-handler",
+        "target": "role:on-ball-defender",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:top-of-key-three",
+        "precedes": ["pnr:s3-screen"]
+      }
+    },
+    {
+      "id": "pnr:s3-screen",
+      "type": "Action",
+      "label": "Set the on-ball screen",
+      "definition": "The screener arrives from the elbow or the dunker spot, sets his feet, and takes the contact legally with his shoulder square to the defender's path.",
+      "props": { "order": 3, "key": ["Stationary at contact: feet set, no extension of hips or elbows", "Re-screen or slip if the first screen is navigated"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:set-on-ball-screen",
+        "actor": "role:screener",
+        "target": "role:on-ball-defender",
+        "startsIn": "zone:high-post",
+        "endsIn": "zone:top-of-key-three",
+        "constrainedBy": ["rule:legal-screen"],
+        "requires": ["skill:screen-setting", "arch:rim-running-big"],
+        "precedes": ["pnr:s4-use-screen", "pnr:d1-read-coverage"]
+      }
+    },
+    {
+      "id": "pnr:s4-use-screen",
+      "type": "Action",
+      "label": "Use the screen shoulder-to-hip",
+      "definition": "The ball handler comes off tight, brushing the screener's shoulder with his hip, so that the screener's body is between him and his defender and the two defenders must both commit.",
+      "props": { "order": 4, "key": ["Tight, not wide: separation lives in the gap between hip and shoulder", "Get your eyes up: the read starts before you come off"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:use-screen",
+        "actor": "role:ball-handler",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:high-post",
+        "constrainedBy": ["rule:traveling-gather"],
+        "requires": ["skill:screen-navigation"],
+        "precedes": ["pnr:s5-roll", "pnr:d1-read-coverage"]
+      }
+    },
+    {
+      "id": "pnr:s5-roll",
+      "type": "Action",
+      "label": "Roll to the rim",
+      "definition": "On the same beat as the handler comes off, the screener turns and sprints to the basket with hands ready, occupying the rim protector and creating the vertical threat.",
+      "props": { "order": 5, "parallelWith": "pnr:s4-use-screen", "key": ["Roll with a purpose: even an unpunished roll wins the possession", "Keep moving through the lane: three seconds is a real constraint"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:roll-to-rim",
+        "actor": "role:roll-man",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:restricted-area",
+        "constrainedBy": ["rule:offensive-three-seconds"],
+        "requires": ["skill:rim-finishing", "skill:vertical-spacing", "arch:rim-running-big"],
+        "produces": ["outcome:rim-attempt", "outcome:lob-dunk"],
+        "precedes": ["pnr:s6-weakside-lift"]
+      }
+    },
+    {
+      "id": "pnr:s6-weakside-lift",
+      "type": "Action",
+      "label": "Weak side lifts and relocates",
+      "definition": "As the ball is driven at the big, the weak-side corner player lifts to the wing and the weak-side wing holds the arc, so the skip pass is available and the help defender cannot guard both.",
+      "props": { "order": 6, "parallelWith": "pnr:s5-roll", "key": ["Lift on the drive, not after the pass", "Never stand still on the weak side: the tag defender is reading you"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:relocate",
+        "actor": "role:spot-up-shooter",
+        "startsIn": "zone:corner-three-right",
+        "endsIn": "zone:wing-three-right",
+        "requires": ["skill:off-ball-movement", "skill:catch-and-shoot"],
+        "precedes": ["pnr:d1-read-coverage"]
+      }
+    },
+
+    {
+      "id": "pnr:d1-read-coverage",
+      "type": "Decision",
+      "label": "Read the coverage",
+      "definition": "The branch point of the play. The ball handler identifies, on the first two dribbles off the screen, which coverage the defence is in, and selects the branch that attacks it.",
+      "props": { "order": 7, "condition": "the coverage chosen by the two screening defenders", "key": ["The read is made with the eyes before the catch, not after the screen", "If you do not know the coverage, take the shot the drop gives you and live with it"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "selectedOption": ["pnr:s7-pullup-vs-drop", "pnr:s9-snake-vs-drop", "pnr:s10-shortroll-vs-blitz", "pnr:s13-slip-vs-switch", "pnr:s15-post-vs-switch", "pnr:s17-reject-vs-ice", "pnr:s19-pocket-pass"]
+      }
+    },
+
+    {
+      "id": "pnr:s7-pullup-vs-drop",
+      "type": "Action",
+      "label": "Pull up against drop coverage",
+      "definition": "The screener's man has sunk below the level of the screen: rise into the pull-up before the big's shadow can contest it.",
+      "props": { "order": 8, "branch": "drop", "key": ["Get into the shot before the recovery, not after it", "Screen must be set high enough to give a clean window"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:pull-up-jump-shot",
+        "actor": "role:ball-handler",
+        "occursIn": "zone:top-of-key-three",
+        "answers": "coverage:drop",
+        "requires": ["skill:three-point-shooting", "arch:pull-up-shooter"],
+        "produces": ["outcome:above-break-three"],
+        "precedes": ["pnr:s19-pocket-pass"]
+      }
+    },
+    {
+      "id": "pnr:s8-pop-vs-drop",
+      "type": "Action",
+      "label": "Pop instead of rolling against drop coverage",
+      "definition": "If the screener is a shooting threat, he spaces to the arc instead of rolling, dragging the drop big out of the paint and emptying the lane for the drive.",
+      "props": { "order": 8, "branch": "drop", "key": ["The pop only works if the handler is willing to hit it", "It turns rim protection into a closeout problem"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:pop-to-perimeter",
+        "actor": "role:pop-man",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:wing-three-right",
+        "answers": "coverage:drop",
+        "requires": ["skill:three-point-shooting", "arch:roll-and-pop-big"],
+        "produces": ["outcome:above-break-three"]
+      }
+    },
+    {
+      "id": "pnr:s9-snake-vs-drop",
+      "type": "Action",
+      "label": "Snake the screen against drop coverage",
+      "definition": "Keep the dribble alive after using the screen and re-attack towards the middle, stringing the drop big out and forcing him to guard the roll and the driver at once.",
+      "props": { "order": 8, "branch": "drop", "key": ["Nose to the sideline, then back to the middle", "The snake only works if you are willing to shoot the pull-up at the end of it"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:snake-dribble",
+        "actor": "role:ball-handler",
+        "startsIn": "zone:high-post",
+        "endsIn": "zone:paint",
+        "answers": "coverage:drop",
+        "constrainedBy": ["rule:traveling-gather"],
+        "requires": ["skill:ball-handling"],
+        "produces": ["outcome:rim-attempt", "outcome:foul-drawn"],
+        "precedes": ["pnr:s19-pocket-pass"]
+      }
+    },
+    {
+      "id": "pnr:s10-shortroll-vs-blitz",
+      "type": "Action",
+      "label": "Short roll against the blitz",
+      "definition": "Two defenders have attacked the ball, so the screener catches at the elbow with a 4-on-3 behind him: shoot it, attack the rim, or hit the open man.",
+      "props": { "order": 8, "branch": "blitz", "key": ["Catch on the move with your feet to the rim", "The ball must be out of the trap within a beat, or the five-second count bites"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:short-roll",
+        "actor": "role:roll-man",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:elbow-left",
+        "answers": "coverage:blitz",
+        "requires": ["skill:short-roll-decisions", "skill:passing-vision", "arch:short-roll-passer"],
+        "produces": ["outcome:rim-attempt", "outcome:corner-three"],
+        "precedes": ["pnr:s11-skip-vs-blitz"]
+      }
+    },
+    {
+      "id": "pnr:s11-skip-vs-blitz",
+      "type": "Action",
+      "label": "Skip the ball out of the trap",
+      "definition": "From the elbow, fly the ball over the top to the weak-side corner or the lifted wing before the back line can rotate twice.",
+      "props": { "order": 9, "branch": "blitz", "key": ["The pass must beat the second rotation, not the first", "Do not dribble into the corner of the trap"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:skip-pass",
+        "actor": "role:hub",
+        "startsIn": "zone:elbow-left",
+        "endsIn": "zone:wing-three-right",
+        "target": "role:spot-up-shooter",
+        "answers": "coverage:blitz",
+        "requires": ["skill:passing-vision"],
+        "produces": ["outcome:corner-three", "outcome:above-break-three"],
+        "precedes": ["pnr:s12-catch-and-shoot"]
+      }
+    },
+    {
+      "id": "pnr:s12-catch-and-shoot",
+      "type": "Action",
+      "label": "Catch and shoot",
+      "definition": "Shoot it on the catch, before the recovering defender can contest.",
+      "props": { "order": 10, "branch": "blitz", "key": ["Feet to the ball, hands ready before the catch", "If the closeout flies by, attack it with one dribble"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:catch-and-shoot",
+        "actor": "role:spot-up-shooter",
+        "occursIn": "zone:wing-three-right",
+        "requires": ["skill:catch-and-shoot", "arch:off-ball-sharpshooter"],
+        "produces": ["outcome:above-break-three"]
+      }
+    },
+    {
+      "id": "pnr:s13-slip-vs-switch",
+      "type": "Action",
+      "label": "Slip the screen against a switch",
+      "definition": "The defence announces the switch early, so the screener abandons the screen and cuts to the rim before his new defender is set.",
+      "props": { "order": 8, "branch": "switch", "key": ["Sell the screen until the defender's head turns", "Slip to the rim, not to the elbow: the switcher is behind you"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:slip-screen",
+        "actor": "role:screener",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:restricted-area",
+        "answers": "coverage:switch",
+        "constrainedBy": ["rule:legal-screen"],
+        "requires": ["skill:rim-finishing"],
+        "produces": ["outcome:rim-attempt", "outcome:lob-dunk"],
+        "precedes": ["pnr:s14-lob-finish"]
+      }
+    },
+    {
+      "id": "pnr:s14-lob-finish",
+      "type": "Action",
+      "label": "Lob finish",
+      "definition": "The passer drops it over the defence; the roll man high-points it above the rim, above the contest.",
+      "props": { "order": 9, "branch": "switch", "key": ["High-point the ball: do not wait for it to come down", "The lob must be thrown to the front rim, not the backboard"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:lob-finish",
+        "actor": "role:roll-man",
+        "occursIn": "zone:restricted-area",
+        "constrainedBy": ["rule:goaltending"],
+        "requires": ["skill:vertical-spacing", "skill:rim-finishing"],
+        "produces": ["outcome:lob-dunk"]
+      }
+    },
+    {
+      "id": "pnr:s15-post-vs-switch",
+      "type": "Action",
+      "label": "Post the mismatch after a switch",
+      "definition": "When a smaller defender is switched onto the screener, get him the ball on the block immediately, before the scram switch can rescue the defence.",
+      "props": { "order": 8, "branch": "switch", "key": ["Attack the mismatch before it disappears", "If the double comes, the corner and the weak-side lift are open"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:post-up",
+        "actor": "role:roll-man",
+        "occursIn": "zone:low-post-left",
+        "answers": "coverage:switch",
+        "constrainedBy": ["rule:offensive-three-seconds"],
+        "requires": ["skill:post-footwork", "arch:post-scorer"],
+        "produces": ["outcome:rim-attempt", "outcome:foul-drawn", "outcome:corner-three"]
+      }
+    },
+    {
+      "id": "pnr:s16-stepback-vs-switch",
+      "type": "Action",
+      "label": "Step-back isolation against a switch",
+      "definition": "If the switch has taken away the pass and the defence will not help, clear a side and separate with a step-back rather than a screen.",
+      "props": { "order": 8, "branch": "switch", "key": ["Best used late in the clock", "Clear the side so no help defender can stunt"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:step-back-three",
+        "actor": "role:ball-handler",
+        "occursIn": "zone:wing-three-left",
+        "answers": "coverage:switch",
+        "requires": ["skill:three-point-shooting"],
+        "produces": ["outcome:above-break-three"],
+        "constrainedBy": ["rule:shot-clock-24"]
+      }
+    },
+    {
+      "id": "pnr:s17-reject-vs-ice",
+      "type": "Action",
+      "label": "Reject the screen against ICE",
+      "definition": "The on-ball defender is funnelling you to the baseline, so refuse the screen and turn the ball back to the middle where the floor is wide open.",
+      "props": { "order": 8, "branch": "ice", "key": ["Reject with a change of pace, not a change of direction only", "The middle is open because the coverage has loaded the baseline"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:reject-screen",
+        "actor": "role:ball-handler",
+        "startsIn": "zone:top-of-key-three",
+        "endsIn": "zone:high-post",
+        "answers": "coverage:ice",
+        "requires": ["skill:ball-handling"],
+        "produces": ["outcome:open-midrange", "outcome:rim-attempt"],
+        "precedes": ["pnr:s18-ball-reversal"]
+      }
+    },
+    {
+      "id": "pnr:s18-ball-reversal",
+      "type": "Action",
+      "label": "Reverse the ball to the weak side",
+      "definition": "Swing the ball back across the top to the weak-side wing; the defence must now shift its entire shell a second time and the second shift is always late.",
+      "props": { "order": 9, "branch": "ice", "key": ["Reverse in the air before the first rotation settles", "Second-side actions are better than first-side: attack the scrambled shell"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:ball-reversal",
+        "actor": "role:connector",
+        "startsIn": "zone:high-post",
+        "endsIn": "zone:wing-three-right",
+        "target": "role:spot-up-shooter",
+        "answers": "coverage:ice",
+        "constrainedBy": ["rule:closely-guarded-5-seconds"],
+        "produces": ["outcome:above-break-three", "outcome:corner-three"],
+        "precedes": ["pnr:s12-catch-and-shoot"]
+      }
+    },
+    {
+      "id": "pnr:s19-pocket-pass",
+      "type": "Action",
+      "label": "Deliver the pocket pass or the lob",
+      "definition": "The default: hit the roller in the window between the two defenders, with a pocket pass on the move or a lob over the top.",
+      "props": { "order": 9, "branch": "default", "key": ["Late is better than early: the window opens when the big commits", "Pass to the front shoulder of the roller, leading him to the rim"] },
+      "edges": {
+        "stepOf": "play:pick-and-roll",
+        "hasActionType": "atype:pocket-pass",
+        "actor": "role:ball-handler",
+        "startsIn": "zone:high-post",
+        "endsIn": "zone:paint",
+        "target": "role:roll-man",
+        "requires": ["skill:passing-vision"],
+        "produces": ["outcome:rim-attempt", "outcome:lob-dunk"],
+        "precedes": ["pnr:s14-lob-finish"]
+      }
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+# Basketball Knowledge Model -- example query
+# question : What should we run late in the shot clock?
+# intent   : situations
+# slots    : situation=sit:late-clock
+# note     : appliesIn ties schemes and plays to the game situation they are built for.
+# generated: python scripts/gen_queries.py (do not edit by hand)
+PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>
+PREFIX bkr:  <https://w3id.org/basketball-kg/resource/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+# Schemes and plays used in a given game situation.
+SELECT ?scheme ?schemeLabel ?formation ?coverage
+WHERE {
+  ?scheme bk:appliesIn ?situation .
+  FILTER(?situation = <https://w3id.org/basketball-kg/resource/sit/late-clock>)
+  OPTIONAL { ?scheme skos:prefLabel ?schemeLabel }
+  OPTIONAL { ?scheme bk:hasFormation ?formation }
+  OPTIONAL { ?scheme bk:hasCoverage ?coverage }
+}
+ORDER BY ?scheme

@@ -1,0 +1,23 @@
+# Basketball Knowledge Model -- example query
+# question : What are the 2-3 zone assignments?
+# intent   : zone_responsibility
+# slots    : scheme=play:zone-defense-2-3
+# note     : Area duties are reified as Assignment nodes so they survive the trip to RDF.
+# generated: python scripts/gen_queries.py (do not edit by hand)
+PREFIX bk:   <https://w3id.org/basketball-kg/ontology#>
+PREFIX bkr:  <https://w3id.org/basketball-kg/resource/>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+# Who is responsible for which area, in which scheme.
+SELECT ?scheme ?assignment ?assignmentLabel ?heldBy
+       (GROUP_CONCAT(DISTINCT ?zoneLabel; SEPARATOR=", ") AS ?zones)
+WHERE {
+  ?assignment bk:ofScheme ?scheme ;
+              bk:coversZone ?zone .
+  OPTIONAL { ?assignment bk:heldBy ?heldBy }
+  OPTIONAL { ?assignment skos:prefLabel ?assignmentLabel }
+  OPTIONAL { ?zone skos:prefLabel ?zoneLabel }
+  FILTER(?scheme = <https://w3id.org/basketball-kg/resource/play/zone-defense-2-3>)
+}
+GROUP BY ?scheme ?assignment ?assignmentLabel ?heldBy
+ORDER BY ?assignment
