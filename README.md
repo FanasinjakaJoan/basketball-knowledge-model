@@ -160,25 +160,36 @@ filled, the SPARQL, the Cypher and the JSON graph pattern that produced it.
 | Route | Returns |
 | --- | --- |
 | `/api/stats` | node/edge counts, type histogram, predicate histogram, dataset manifest, validation |
-| `/api/ask?q=…` | intent, slots, confidence, evidence, summary, rows, plus `sparql` / `cypher` / `pattern` |
+| `/api/ask?q=…&lang=en\|fr\|mg` | intent, slots, confidence, evidence, **summary in the requested language**, rows, plus `sparql` / `cypher` / `pattern` |
 | `/api/search?q=&type=` | fuzzy vocabulary search (label, aliases, definitions) |
 | `/api/node?id=` | label, definition, props, outgoing edges grouped by predicate, incoming edges, DOT |
 | `/api/graph?focus=&depth=` | node-link JSON for the neighbourhood (capped at 220 nodes by degree) |
-| `/api/court?scheme=` | ASCII half-court with the covered zones highlighted |
-| `/api/intents`, `/api/examples` | the 12 intents; the sample questions and plays the UI offers |
+| `/api/court?scheme=&lang=` | ASCII half-court with the covered zones highlighted (localised title) |
+| `/api/intents?lang=`, `/api/examples` | the 12 intents with their purpose **in the requested language**; the sample questions and plays the UI offers |
 
 Everything is read-only and every path is a relative `/api/…` fetch, so it sits
 happily behind a proxy or on a LAN.
 
-**Interface languages.** The navigation chrome ships in **English, Français and
-Malagasy** — switch with the EN / FR / MG buttons in the header (choice kept in
-`localStorage`, first visit follows the browser language). Per the project
-convention, basketball and graph terminology ("pick and roll", "drop coverage",
-"scheme", "nodes", "edges", intent names…) and all graph content stay in
-English in every language. To add a language: append one block to the
-strict-JSON `I18N` dictionary in `web/index.html` and one button to the header
-switcher — `tests/test_serve.py` enforces that every language defines the same
-key set as the markup uses.
+**Interface languages.** The UI ships in **English, Français and Malagasy** —
+switch with the EN / FR / MG buttons in the header (choice kept in
+`localStorage`, first visit follows the browser language). Two layers are
+localised:
+
+- the *navigation chrome*, via the strict-JSON `I18N` dictionary in
+  `web/index.html` (`data-i18n` attributes + a `t(key)` helper);
+- the *generated explanations* — every answer summary, the intent purposes and
+  the court header — rendered server-side by `basketball_kg/i18n.py`
+  (`Translator`), selected with `?lang=` on `/api/ask`, `/api/court` and
+  `/api/intents`, or `--lang` on the `ask` / `court` / `intents` CLI commands.
+  Switching language in the UI re-fetches the current answer live.
+
+Per the project convention, basketball and graph **terminology stays English in
+every language** ("pick and roll", "drop coverage", "scheme", "nodes",
+"edges", intent names…) and so does all graph content (labels, definitions,
+rows). Only the sentence frames are translated. To add a language: one block in
+the `I18N` dictionary + one header button (UI), one `basketball_kg/i18n.py`
+catalog block (server) — `tests/test_i18n.py` and `tests/test_serve.py` enforce
+key/placeholder parity across locales.
 
 ### The court renderer
 

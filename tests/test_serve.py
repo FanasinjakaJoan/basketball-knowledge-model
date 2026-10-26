@@ -89,6 +89,41 @@ class TestApi(unittest.TestCase):
             json.dumps(payload, ensure_ascii=False)
 
 
+class TestLocalizedApi(unittest.TestCase):
+    """`lang=` localises the generated explanations (summaries, purposes, court)."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.app = KnowledgeGraphServer()
+
+    def test_ask_summary_follows_lang(self):
+        en = self.app.ask("How do you attack a 2-3 zone?", lang="en")["summary"]
+        fr = self.app.ask("How do you attack a 2-3 zone?", lang="fr")["summary"]
+        mg = self.app.ask("How do you attack a 2-3 zone?", lang="mg")["summary"]
+        self.assertIn("tactical answer(s) to Zone 2-3", en)
+        self.assertIn("réponse(s) tactique(s) contre Zone 2-3", fr)
+        self.assertIn("valy taktika", mg)
+        # unknown locales fall back to English
+        self.assertEqual(self.app.ask("How do you attack a 2-3 zone?", lang="de")["summary"], en)
+
+    def test_ask_lang_is_optional(self):
+        self.assertEqual(self.app.ask("What beats drop coverage?")["summary"],
+                         self.app.ask("What beats drop coverage?", lang="en")["summary"])
+
+    def test_intents_purpose_follows_lang(self):
+        en = self.app.intents()["intents"]["counters"]["purpose"]
+        fr = self.app.intents(lang="fr")["intents"]["counters"]["purpose"]
+        mg = self.app.intents(lang="mg")["intents"]["counters"]["purpose"]
+        self.assertTrue(en.startswith("Tactical answers"))
+        self.assertTrue(fr.startswith("Réponses tactiques"))
+        self.assertTrue(mg.startswith("Valy taktika"))
+
+    def test_court_title_follows_lang(self):
+        for lang, needle in [("en", "Half court"), ("fr", "Demi-terrain"), ("mg", "Tapany kianja")]:
+            court = self.app.court(scheme="scheme:zone-2-3", lang=lang)["court"]
+            self.assertIn(needle, court.splitlines()[0], lang)
+
+
 class TestIndexI18n(unittest.TestCase):
     """The explorer's navigation ships in English, French and Malagasy.
 

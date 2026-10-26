@@ -219,14 +219,20 @@ def _yrow(y: float) -> int:
 def ascii_court(
     kg: KnowledgeGraph,
     highlight: Optional[Iterable[str]] = None,
-    title: str = "Half court (offensive basket at the bottom)",
+    title: Optional[str] = None,
+    lang: str = "en",
 ) -> str:
     """Render the half-court zone model as text.
 
     ``highlight`` takes zone ids (``zone:corner-three-left``) or labels; those
     cells are drawn in ``[brackets]`` so you can see, at a glance, which parts of
-    the floor a scheme occupies, concedes or attacks.
+    the floor a scheme occupies, concedes or attacks. ``title`` overrides the
+    localised heading (``lang``).
     """
+    if title is None:
+        from .i18n import Translator  # local import: viz stays dependency-light
+
+        title = Translator(lang)("court.title")
     grid = [[" "] * _WIDTH for _ in range(_ROWS)]
 
     def put(row: int, pos: int, char: str) -> None:

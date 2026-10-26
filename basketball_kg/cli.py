@@ -21,6 +21,7 @@ from typing import Any, Dict, List, Optional, Sequence
 
 from . import __version__
 from .graph import graph_stats, subgraph_around, to_networkx, to_node_link
+from .i18n import Translator, normalize_lang
 from .model import KnowledgeGraph, load_graph
 from .nlq import VocabularyIndex, answer, parse
 from .queries import INTENTS, QueryResult, intent_help, run_intent
@@ -127,13 +128,13 @@ def _cmd_stats(kg: KnowledgeGraph, args: argparse.Namespace) -> int:
 
 
 def _cmd_intents(kg: KnowledgeGraph, args: argparse.Namespace) -> int:
-    print(intent_help())
+    print(intent_help(normalize_lang(args.lang)))
     return 0
 
 
 def _cmd_ask(kg: KnowledgeGraph, args: argparse.Namespace) -> int:
     index = VocabularyIndex(kg)
-    result = answer(kg, args.question, index=index)
+    result = answer(kg, args.question, index=index, lang=normalize_lang(args.lang))
     if args.show_query:
         plan = result.plan
         print(f"# parsed: {plan.intent}  confidence={plan.confidence}")
@@ -213,8 +214,10 @@ def _cmd_court(kg: KnowledgeGraph, args: argparse.Namespace) -> int:
                     zones.extend(kg[assignment].out("coversZone"))
         zones = sorted(set(zones))
         highlight.extend(zones)
-        print(f"# {node.label} covers {len(zones)} zone(s): {', '.join(_short(kg[z].label, 18) for z in zones if kg.get(z))}")
-    print(ascii_court(kg, highlight=highlight))
+        lang = normalize_lang(getattr(args, "lang", "en"))
+        print(Translator(lang)("court.covers", name=node.label, n=len(zones),
+                               zones=', '.join(_short(kg[z].label, 18) for z in zones if kg.get(z))))
+    print(ascii_court(kg, highlight=highlight, lang=normalize_lang(getattr(args, "lang", "en"))))
     return 0
 
 
@@ -276,13 +279,16 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("stats", help="graph statistics").set_defaults(func=_cmd_stats)
-    sub.add_parser("intents", help="list query intents").set_defaults(func=_cmd_intents)
+    p_intents = sub.add_parser("intents", help="list query intents")
+    p_intents.add_argument("--lang", default="en", help="purpose language: en, fr or mg")
+    p_intents.set_defaults(func=_cmd_intents)
     sub.add_parser("validate", help="check ids, types and dangling references").set_defaults(func=_cmd_validate)
 
     p_ask = sub.add_parser("ask", help="answer a natural-language question")
     p_ask.add_argument("question")
     p_ask.add_argument("-f", "--format", default="text", choices=["text", "json", "sparql", "cypher", "plan"])
     p_ask.add_argument("--show-query", action="store_true", help="print the parse trace")
+    p_ask.add_argument("--lang", default="en", help="summary language: en, fr or mg")
     p_ask.set_defaults(func=_cmd_ask, format="text")
 
     p_query = sub.add_parser("query", help="run a structured intent directly")
@@ -306,6 +312,7 @@ def build_parser() -> argparse.ArgumentParser:
     p_export.set_defaults(func=_cmd_export, format="dot")
 
     p_court = sub.add_parser("court", help="draw the ASCII half court")
+    p_court.add_argument("--lang", default="en", help="title/header language: en, fr or mg")
     p_court.add_argument("--highlight", action="append", default=[], help="zone id or label to highlight")
     p_court.add_argument("--scheme", default=None, help="highlight every zone a scheme covers")
     p_court.set_defaults(func=_cmd_court, highlight=[])

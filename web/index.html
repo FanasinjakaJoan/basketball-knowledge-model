@@ -333,6 +333,9 @@ function applyLang() {
   document.querySelectorAll(".langbtn").forEach(b => b.classList.toggle("active", b.dataset.lang === LANG));
   if (!state.intent) $("summary").textContent = t("answer.empty");
   if (state.examples) fillSelects();
+  // re-fetch the server-generated explanations in the new language
+  if (state.lastQuestion) run(state.lastQuestion, true).catch(() => {});
+  if ($("panel-court").classList.contains("active")) loadCourt();
 }
 function setLang(lang) {
   if (!I18N[lang]) return;
@@ -411,10 +414,10 @@ function showTab(name) {
 }
 
 /* ------------------------------------------------------------------- query */
-async function run(question) {
+async function run(question, keepTab) {
   $('q').value = question;
-  const data = await (await fetch('/api/ask?q=' + encodeURIComponent(question))).json();
-  state.rows = data.rows || []; state.intent = data.intent;
+  const data = await (await fetch('/api/ask?q=' + encodeURIComponent(question) + '&lang=' + encodeURIComponent(LANG))).json();
+  state.rows = data.rows || []; state.intent = data.intent; state.lastQuestion = question;
   $('summary').textContent = data.summary || data.error || '';
   $('meta').innerHTML = data.intent
     ? `intent <code>${esc(data.intent)}</code> · ${t('meta.confidence')} <code>${data.confidence}</code> · ${state.rows.length} ${t('meta.rows')}`
@@ -427,7 +430,7 @@ async function run(question) {
     {intent: data.intent, slots: data.slots, confidence: data.confidence, evidence: data.evidence,
      graph_pattern: data.pattern}, null, 2);
   document.querySelectorAll('#results .item').forEach(el => el.onclick = () => openNode(el.dataset.id));
-  showTab('answer');
+  if (!keepTab) showTab('answer');
 }
 
 function renderRows(rows, intent) {
@@ -497,7 +500,7 @@ function closeDrawer() { $('drawer').classList.remove('open'); }
 
 /* ------------------------------------------------------------------ court */
 async function loadCourt() {
-  const params = new URLSearchParams();
+  const params = new URLSearchParams({lang: LANG});
   if (state.scheme) params.set('scheme', state.scheme);
   const data = await (await fetch('/api/court?' + params.toString())).json();
   $('courtOut').textContent = data.court;

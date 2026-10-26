@@ -19,6 +19,7 @@ from typing import Any, Dict, List, Optional
 from urllib.parse import parse_qs, urlparse
 
 from .graph import graph_stats, subgraph_around, to_networkx, to_node_link
+from .i18n import Translator, normalize_lang
 from .model import KnowledgeGraph, load_graph
 from .nlq import VocabularyIndex, answer, parse
 from .queries import INTENTS, QueryPlan, intent_help
@@ -56,9 +57,9 @@ class KnowledgeGraphServer:
             "validation": self.kg.validate(),
         }
 
-    def ask(self, question: str) -> Dict[str, Any]:
+    def ask(self, question: str, lang: str = "en") -> Dict[str, Any]:
         plan = parse(self.kg, question, index=self.index)
-        result = plan.execute(kg=self.kg)
+        result = plan.execute(kg=self.kg, lang=lang)
         return {
             "question": question,
             "intent": plan.intent,
@@ -126,7 +127,7 @@ class KnowledgeGraphServer:
             node["definition"] = str(node.get("definition", ""))[:200]
         return payload
 
-    def court(self, highlight: Optional[List[str]] = None, scheme: Optional[str] = None) -> Dict[str, Any]:
+    def court(self, highlight: Optional[List[str]] = None, scheme: Optional[str] = None, lang: str = "en") -> Dict[str, Any]:
         marks = list(highlight or [])
         if scheme:
             node = self.kg.get(scheme) or self.kg.resolve(scheme)
@@ -140,10 +141,12 @@ class KnowledgeGraphServer:
                         if self.kg.get(assignment):
                             zones.extend(self.kg[assignment].out("coversZone"))
                 marks.extend(sorted(set(zones)))
-        return {"court": ascii_court(self.kg, highlight=marks), "highlighted": marks}
+        return {"court": ascii_court(self.kg, highlight=marks, lang=lang), "highlighted": marks}
 
-    def intents(self) -> Dict[str, Any]:
-        return {"intents": INTENTS, "help": intent_help()}
+    def intents(self, lang: str = "en") -> Dict[str, Any]:
+        t = Translator(lang)
+        localized = {name: {**meta, "purpose": t.purpose(name)} for name, meta in INTENTS.items()}
+        return {"intents": localized, "help": intent_help(lang)}
 
     def examples(self) -> Dict[str, Any]:
         return {
@@ -240,7 +243,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(self.app.stats())
             elif path == "/api/ask":
                 question = one("q", "")
-                self._json(self.app.ask(question) if question.strip() else {"error": "empty question"})
+                self._json(self.app.ask(question, lang=normalize_lang(one("lang", "en")))
+                           if question.strip() else {"error": "empty question"})
             elif path == "/api/search":
                 self._json(self.app.search(one("q", ""), params.get("type"), limit=int(one("limit", 40))))
             elif path == "/api/node":
@@ -248,9 +252,10 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/graph":
                 self._json(self.app.graph(focus=one("focus"), depth=int(one("depth", 1))))
             elif path == "/api/court":
-                self._json(self.app.court(highlight=params.get("highlight"), scheme=one("scheme")))
+                self._json(self.app.court(highlight=params.get("highlight"), scheme=one("scheme"),
+                                          lang=normalize_lang(one("lang", "en"))))
             elif path == "/api/intents":
-                self._json(self.app.intents())
+                self._json(self.app.intents(lang=normalize_lang(one("lang", "en"))))
             elif path == "/api/examples":
                 self._json(self.app.examples())
             elif path == "/api/plan":
