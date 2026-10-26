@@ -1,0 +1,92 @@
+"""Tests for the web explorer's API layer (no sockets: the handlers are tested directly)."""
+
+import json
+import unittest
+
+from basketball_kg.serve import KnowledgeGraphServer
+
+
+class TestApi(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.app = KnowledgeGraphServer()
+
+    def test_stats(self):
+        stats = self.app.stats()
+        self.assertEqual(stats["nodes"], len(self.app.kg))
+        self.assertEqual(stats["validation"], {"dangling": [], "bad_ids": [], "bad_types": []})
+        self.assertIn("Zone", stats["types"])
+        self.assertTrue(stats["datasets"])
+
+    def test_ask_returns_a_plan_and_rows(self):
+        payload = self.app.ask("How do you attack a 2-3 zone?")
+        self.assertEqual(payload["intent"], "counters")
+        self.assertEqual(payload["slots"]["target"], "scheme:zone-2-3")
+        self.assertTrue(payload["rows"])
+        self.assertTrue(payload["evidence"])
+        self.assertIn("SELECT", payload["sparql"])
+        self.assertTrue(payload["cypher"].strip().endswith(";"))
+        self.assertTrue(payload["pattern"])
+
+    def test_ask_rejects_an_empty_question(self):
+        payload = self.app.ask("   ")
+        self.assertIn(payload["intent"], {"search", "describe"})
+
+    def test_search_respects_the_type_filter(self):
+        payload = self.app.search("corner", types=["Zone"])
+        self.assertTrue(payload["rows"])
+        self.assertTrue(all(r["type"] == "Zone" for r in payload["rows"]))
+
+    def test_node_detail_has_outgoing_and_incoming(self):
+        detail = self.app.node("z23:a4-bottom-middle")
+        self.assertEqual(detail["type"], "Assignment")
+        self.assertIn("role:rim-protector", str(detail["outgoing"].get("heldBy", "")))
+        self.assertIn("zone:paint", str(detail["outgoing"].get("coversZone", "")))
+        self.assertTrue(detail["incoming"])
+        self.assertIn("digraph", detail["dot"])
+
+    def test_node_falls_back_to_search(self):
+        detail = self.app.node("Drop")
+        self.assertEqual(detail["id"], "coverage:drop")
+
+    def test_node_missing(self):
+        self.assertIn("error", self.app.node("zone:not-a-zone-at-all"))
+
+    def test_graph_focus(self):
+        payload = self.app.graph(focus="play:pick-and-roll", depth=1)
+        ids = {n["id"] for n in payload["nodes"]}
+        self.assertIn("play:pick-and-roll", ids)
+        self.assertIn("pnr:s5-roll", ids)
+        self.assertNotIn("zone:backcourt", ids)
+        self.assertTrue(all("predicate" in link for link in payload["links"]))
+
+    def test_graph_whole_model_is_capped(self):
+        payload = self.app.graph()
+        self.assertLessEqual(len(payload["nodes"]), 220)
+
+    def test_court_with_scheme_highlights_covered_zones(self):
+        payload = self.app.court(scheme="scheme:zone-2-3")
+        self.assertIn("zone:corner-three-left", payload["highlighted"])
+        self.assertIn("[C3<]", payload["court"])
+
+    def test_court_plain(self):
+        self.assertIn("PNT", self.app.court()["court"])
+
+    def test_intents_and_examples(self):
+        self.assertIn("counters", self.app.intents()["intents"])
+        examples = self.app.examples()
+        self.assertTrue(examples["questions"])
+        self.assertTrue(examples["plays"])
+        # every advertised question must actually return rows
+        for question in examples["questions"]:
+            with self.subTest(question):
+                self.assertTrue(self.app.ask(question)["rows"])
+
+    def test_payloads_are_json_serialisable(self):
+        for payload in (self.app.stats(), self.app.ask("what beats drop coverage?"),
+                        self.app.graph(focus="play:motion-offense"), self.app.examples()):
+            json.dumps(payload, ensure_ascii=False)
+
+
+if __name__ == "__main__":
+    unittest.main()

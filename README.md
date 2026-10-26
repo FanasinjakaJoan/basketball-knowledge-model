@@ -142,7 +142,33 @@ python -m basketball_kg.cli court --scheme scheme:zone-2-3         # the zone, o
 python -m basketball_kg.cli export -f dot --focus play:pick-and-roll --out pnr.dot
 python -m basketball_kg.cli export -f jsonld --out basketball.jsonld
 python -m basketball_kg.cli export -f ttl --ontology --out basketball.ttl
+python -m basketball_kg.cli serve                                   # web explorer on :8000
 ```
+
+### Web explorer
+
+```bash
+python -m basketball_kg.cli serve --host 0.0.0.0 --port 8000   # → http://localhost:8000
+```
+
+A single-page explorer with no build step and no CDN — stdlib `http.server` on the
+back end, one `web/index.html` on the front (hand-rolled SVG force layout, so the
+Court tab and the graph need no Graphviz). It asks questions in plain English and
+shows its work: every answer comes with the parsed intent, the slots that were
+filled, the SPARQL, the Cypher and the JSON graph pattern that produced it.
+
+| Route | Returns |
+| --- | --- |
+| `/api/stats` | node/edge counts, type histogram, predicate histogram, dataset manifest, validation |
+| `/api/ask?q=…` | intent, slots, confidence, evidence, summary, rows, plus `sparql` / `cypher` / `pattern` |
+| `/api/search?q=&type=` | fuzzy vocabulary search (label, aliases, definitions) |
+| `/api/node?id=` | label, definition, props, outgoing edges grouped by predicate, incoming edges, DOT |
+| `/api/graph?focus=&depth=` | node-link JSON for the neighbourhood (capped at 220 nodes by degree) |
+| `/api/court?scheme=` | ASCII half-court with the covered zones highlighted |
+| `/api/intents`, `/api/examples` | the 12 intents; the sample questions and plays the UI offers |
+
+Everything is read-only and every path is a relative `/api/…` fetch, so it sits
+happily behind a proxy or on a LAN.
 
 ### The court renderer
 
@@ -252,13 +278,16 @@ basketball_kg/
   queries.py  12 intents -> query plan -> SPARQL / Cypher / in-memory
   nlq.py      natural language -> query plan (rules + alias index)
   viz.py      Graphviz DOT export, ASCII half-court renderer
+  serve.py    stdlib HTTP server: read-only JSON API + static files
   cli.py      command line interface
+web/
+  index.html  single-file explorer UI (no build, no CDN)
 queries/
   sparql/*.rq            10 generated example queries (all executed by the tests)
   cypher/*.cypher        the same 10 as Cypher
   nl_to_query.json       NL -> intent -> slots -> three renderings
 scripts/gen_queries.py   regenerates queries/ from the templates (--check in CI)
-tests/                   79 unittest tests
+tests/                   93 unittest tests
 docs/                    ONTOLOGY.md, PLAY_MODELS.md, QUERY_COOKBOOK.md
 ```
 

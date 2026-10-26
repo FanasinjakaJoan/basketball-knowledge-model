@@ -231,6 +231,18 @@ def _cmd_sparql(kg: KnowledgeGraph, args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_serve(kg: KnowledgeGraph, args: argparse.Namespace) -> int:
+    """Start the web explorer (blocks until interrupted)."""
+    from .serve import KnowledgeGraphServer, main as serve_main
+
+    # reuse the graph the CLI already loaded, unless the caller pointed elsewhere
+    app = KnowledgeGraphServer(kg=kg)
+    argv = ["--host", args.host, "--port", str(args.port)]
+    if args.data:
+        argv += ["--data", str(args.data)]
+    return serve_main(argv=argv, app=app)
+
+
 def _cmd_validate(kg: KnowledgeGraph, args: argparse.Namespace) -> int:
     problems = kg.validate()
     total = sum(len(v) for v in problems.values())
@@ -296,6 +308,12 @@ def build_parser() -> argparse.ArgumentParser:
     p_court.add_argument("--highlight", action="append", default=[], help="zone id or label to highlight")
     p_court.add_argument("--scheme", default=None, help="highlight every zone a scheme covers")
     p_court.set_defaults(func=_cmd_court, highlight=[])
+
+    p_serve = sub.add_parser("serve", help="run the web explorer (http://0.0.0.0:8000)")
+    p_serve.add_argument("--host", default="0.0.0.0")
+    p_serve.add_argument("--port", type=int, default=8000)
+    p_serve.add_argument("--data", type=Path, default=None, help="directory holding the data/ JSON files")
+    p_serve.set_defaults(func=_cmd_serve)
 
     p_sparql = sub.add_parser("sparql", help="run SPARQL against the RDF projection")
     p_sparql.add_argument("--query", default=None)

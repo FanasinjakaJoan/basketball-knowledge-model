@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Basketball Knowledge Model — explorer</title>
+<style>
+  :root {
+    --bg: #0f1420;
+    --panel: #161d2c;
+    --panel-2: #1d2637;
+    --line: #2a3548;
+    --text: #e6ecf5;
+    --muted: #94a3b8;
+    --accent: #5ac8fa;
+    --accent-2: #ffb454;
+    --good: #5ddb92;
+    --bad: #ff7a7a;
+    --off: #6ea8fe;
+    --def: #ff9db1;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  a { color: var(--accent); }
+  header {
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+    padding: 12px 18px; background: linear-gradient(90deg, #16213a, #101725);
+    border-bottom: 1px solid var(--line); position: sticky; top: 0; z-index: 20;
+  }
+  header h1 { font-size: 16px; margin: 0; letter-spacing: .3px; white-space: nowrap; }
+  header h1 span { color: var(--muted); font-weight: 400; }
+  .badges { display: flex; gap: 8px; flex-wrap: wrap; }
+  .badge {
+    background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 2px 10px; font-size: 11px; color: var(--muted);
+  }
+  .badge b { color: var(--text); font-weight: 600; }
+  .search { flex: 1 1 320px; display: flex; gap: 8px; min-width: 260px; }
+  input[type=text], select {
+    background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    border-radius: 8px; padding: 8px 10px; font-size: 13px; width: 100%;
+  }
+  input[type=text]:focus, select:focus { outline: 2px solid rgba(90,200,250,.35); border-color: var(--accent); }
+  button {
+    background: var(--accent); color: #06222e; border: 0; border-radius: 8px;
+    padding: 8px 14px; font-weight: 600; font-size: 13px; cursor: pointer;
+  }
+  button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
+  button.ghost:hover { border-color: var(--accent); color: var(--accent); }
+  main { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 0; height: calc(100vh - 61px); }
+  aside {
+    border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; padding: 14px;
+  }
+  aside h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin: 18px 0 8px; }
+  aside h2:first-child { margin-top: 0; }
+  .chip {
+    display: inline-block; background: var(--panel-2); border: 1px solid var(--line); border-radius: 999px;
+    padding: 4px 10px; margin: 0 6px 6px 0; font-size: 12px; cursor: pointer; color: var(--text);
+  }
+  .chip:hover { border-color: var(--accent); color: var(--accent); }
+  .list { display: flex; flex-direction: column; gap: 4px; }
+  .item {
+    text-align: left; background: transparent; border: 1px solid transparent; border-radius: 8px;
+    padding: 6px 8px; cursor: pointer; color: var(--text); font-size: 12.5px; line-height: 1.35;
+  }
+  .item:hover { background: var(--panel-2); border-color: var(--line); }
+  .item .t { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; }
+  section.content { overflow: auto; padding: 16px 18px 60px; }
+  .tabs { display: flex; gap: 6px; border-bottom: 1px solid var(--line); margin-bottom: 14px; flex-wrap: wrap; }
+  .tab {
+    background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--muted);
+    padding: 8px 12px; font-size: 13px; cursor: pointer; border-radius: 6px 6px 0 0;
+  }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); background: rgba(90,200,250,.07); }
+  .tab:hover { color: var(--text); }
+  .panel { display: none; }
+  .panel.active { display: block; }
+  .summary { color: var(--muted); margin: 0 0 12px; font-size: 13px; }
+  .meta { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+  .meta code { color: var(--accent-2); font-family: var(--mono); }
+  .evidence { font-family: var(--mono); font-size: 11px; color: var(--muted); margin: 0 0 12px; padding-left: 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+  th, td { text-align: left; padding: 6px 10px 6px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .6px; white-space: nowrap; }
+  td.wrap { max-width: 340px; }
+  .cards { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+  .card h3 { margin: 0 0 4px; font-size: 14px; }
+  .card .kind { font-size: 10.5px; text-transform: uppercase; letter-spacing: .8px; color: var(--accent); }
+  .card p { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; }
+  .kv { margin-top: 8px; display: grid; grid-template-columns: 92px 1fr; gap: 2px 8px; font-size: 12px; }
+  .kv div:nth-child(odd) { color: var(--muted); }
+  .kv div:nth-child(even) { color: var(--text); }
+  pre {
+    background: #0b1018; border: 1px solid var(--line); border-radius: 10px; padding: 12px;
+    overflow: auto; font-family: var(--mono); font-size: 12px; line-height: 1.45; margin: 0;
+  }
+  pre.court { font-size: 12px; line-height: 1.05; }
+  .graphwrap { position: relative; background: #0b1018; border: 1px solid var(--line); border-radius: 10px; height: 62vh; }
+  svg { width: 100%; height: 100%; display: block; cursor: grab; }
+  svg text { font-size: 9.5px; fill: var(--muted); pointer-events: none; }
+  svg line { stroke: #33415c; stroke-width: .8; }
+  svg circle { cursor: pointer; stroke: #0b1018; stroke-width: 1.2; }
+  .graphbar { display: flex; gap: 8px; align-items: center; margin-bottom: 10px; flex-wrap: wrap; font-size: 12px; color: var(--muted); }
+  .legend { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 8px; font-size: 11px; color: var(--muted); }
+  .legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; }
+  .drawer {
+    position: fixed; top: 61px; right: 0; width: min(430px, 92vw); height: calc(100vh - 61px);
+    background: var(--panel); border-left: 1px solid var(--line); padding: 16px; overflow: auto; z-index: 30;
+    transform: translateX(100%); transition: transform .18s ease;
+  }
+  .drawer.open { transform: translateX(0); }
+  .drawer h3 { margin: 0 0 2px; font-size: 16px; }
+  .drawer .close { position: absolute; top: 12px; right: 12px; }
+  .rel { margin-top: 12px; }
+  .rel h4 { margin: 0 0 6px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+  .pill {
+    display: inline-block; background: var(--panel-2); border: 1px solid var(--line);
+    border-radius: 6px; padding: 1px 7px; margin: 0 4px 4px 0; font-size: 11.5px;
+  }
+  .pill b { color: var(--accent); font-weight: 500; }
+  .keys { margin: 8px 0 0; padding-left: 16px; color: var(--muted); font-size: 12.5px; }
+  .keys li { margin-bottom: 3px; }
+  .empty { color: var(--muted); padding: 24px 0; }
+  .err { color: var(--bad); }
+  .flex { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } aside { display: none; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Basketball Knowledge Model <span>· explorer</span></h1>
+  <div class="badges" id="badges"></div>
+  <div class="search">
+    <input id="q" type="text" placeholder="Ask: how do you attack a 2-3 zone?" autocomplete="off" />
+    <button id="ask">Ask</button>
+  </div>
+</header>
+
+<main>
+  <aside>
+    <h2>Example questions</h2>
+    <div id="examples"></div>
+    <h2>Browse</h2>
+    <div class="flex" style="margin-bottom:8px">
+      <select id="typeFilter" style="flex:1"></select>
+    </div>
+    <input id="filter" type="text" placeholder="filter by name…" />
+    <div class="list" id="browse" style="margin-top:8px"></div>
+    <h2>Court</h2>
+    <div id="schemes" style="margin-bottom:8px"></div>
+    <h2>Play graphs</h2>
+    <div id="plays"></div>
+  </aside>
+
+  <section class="content">
+    <div class="tabs">
+      <button class="tab active" data-tab="answer">Answer</button>
+      <button class="tab" data-tab="plan">Query plan</button>
+      <button class="tab" data-tab="sparql">SPARQL</button>
+      <button class="tab" data-tab="cypher">Cypher</button>
+      <button class="tab" data-tab="graph">Graph</button>
+      <button class="tab" data-tab="court">Court</button>
+    </div>
+
+    <div class="panel active" id="panel-answer">
+      <p class="summary" id="summary">Ask a question, or pick one on the left.</p>
+      <div class="meta" id="meta"></div>
+      <ul class="evidence" id="evidence"></ul>
+      <div id="results"></div>
+    </div>
+    <div class="panel" id="panel-plan"><pre id="planOut">—</pre></div>
+    <div class="panel" id="panel-sparql"><pre id="sparqlOut">—</pre></div>
+    <div class="panel" id="panel-cypher"><pre id="cypherOut">—</pre></div>
+    <div class="panel" id="panel-graph">
+      <div class="graphbar">
+        <select id="graphFocus" style="max-width:320px"></select>
+        <select id="graphDepth">
+          <option value="1">depth 1</option>
+          <option value="2">depth 2</option>
+        </select>
+        <span id="graphInfo"></span>
+      </div>
+      <div class="graphwrap"><svg id="svg"></svg></div>
+      <div class="legend" id="graphLegend"></div>
+    </div>
+    <div class="panel" id="panel-court">
+      <div class="graphbar"><select id="courtScheme" style="max-width:320px"></select></div>
+      <pre class="court" id="courtOut">—</pre>
+    </div>
+  </section>
+</main>
+
+<div class="drawer" id="drawer">
+  <button class="ghost close" onclick="closeDrawer()">close</button>
+  <div id="drawerBody"></div>
+</div>
+
+<script>
+const state = { rows: [], intent: null, focus: null, nodes: [], links: [], scheme: null };
+
+const TYPE_COLORS = {
+  Play: '#ff7a7a', OffensivePlay: '#ff7a7a', DefensivePlay: '#ff9db1',
+  Action: '#6ea8fe', ActionType: '#a8c7ff', Decision: '#ffb454', Assignment: '#ff9db1',
+  Zone: '#5ddb92', ZoneType: '#9be7bd',
+  Scheme: '#c792ea', OffensiveScheme: '#c792ea', DefensiveScheme: '#e1a3ff',
+  Coverage: '#ffb454', Formation: '#e6ecf5', Counter: '#ff6f91', Outcome: '#7fdbca',
+  Situation: '#8fa6c4', Rule: '#ffe066', RuleType: '#ffe066', Penalty: '#ffd6a5',
+  Position: '#5ac8fa', PositionGroup: '#9be3ff', Role: '#7fdbca', Archetype: '#5ddb92',
+  Skill: '#e6ecf5', Player: '#5ac8fa', Coach: '#5ac8fa', Team: '#e6ecf5', Concept: '#94a3b8'
+};
+const colorOf = t => TYPE_COLORS[t] || '#94a3b8';
+
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ------------------------------------------------------------------ chrome */
+async function boot() {
+  const stats = await (await fetch('/api/stats')).json();
+  $('badges').innerHTML = [
+    ['nodes', stats.nodes], ['edges', stats.edges], ['datasets', stats.datasets.length],
+    ['types', Object.keys(stats.node_types).length]
+  ].map(([k, v]) => `<span class="badge">${k} <b>${v}</b></span>`).join('');
+
+  const ex = await (await fetch('/api/examples')).json();
+  $('examples').innerHTML = ex.questions.map(q => `<span class="chip">${esc(q)}</span>`).join('');
+  $('examples').onclick = e => { if (e.target.classList.contains('chip')) run(e.target.textContent); };
+
+  $('schemes').innerHTML = [{id:'', label:'— no scheme —'}, ...ex.schemes]
+    .map(s => `<span class="chip" data-scheme="${esc(s.id)}">${esc(s.label)}</span>`).join('');
+  $('schemes').onclick = e => {
+    if (!e.target.dataset.scheme) return;
+    state.scheme = e.target.dataset.scheme || null;
+    showTab('court'); loadCourt();
+  };
+
+  $('plays').innerHTML = ex.plays.map(p => `<span class="chip" data-play="${esc(p.id)}">${esc(p.label)}</span>`).join('');
+  $('plays').onclick = e => {
+    if (!e.target.dataset.play) return;
+    state.focus = e.target.dataset.play;
+    showTab('graph'); loadGraph();
+  };
+
+  const types = ['', ...stats.types];
+  $('typeFilter').innerHTML = types.map(t => `<option value="${esc(t)}">${t || 'all types'}</option>`).join('');
+  $('graphFocus').innerHTML = ex.plays.concat([{id:'scheme:zone-2-3', label:'Zone 2-3 (scheme)'},
+      {id:'coverage:drop', label:'Drop coverage'}, {id:'arch:rim-protector', label:'Rim protector'}])
+    .map(p => `<option value="${esc(p.id)}">${esc(p.label)}</option>`).join('') +
+    `<option value="">— whole graph (top 220) —</option>`;
+  $('courtScheme').innerHTML = [{id:'', label:'— no scheme —'}, ...ex.schemes]
+    .map(s => `<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('');
+
+  browse();
+  loadGraph();
+  loadCourt();
+}
+
+document.querySelectorAll('.tab').forEach(t => t.onclick = () => showTab(t.dataset.tab));
+function showTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+  if (name === 'graph' && !state.nodes.length) loadGraph();
+  if (name === 'court') loadCourt();
+}
+
+/* ------------------------------------------------------------------- query */
+async function run(question) {
+  $('q').value = question;
+  const data = await (await fetch('/api/ask?q=' + encodeURIComponent(question))).json();
+  state.rows = data.rows || []; state.intent = data.intent;
+  $('summary').textContent = data.summary || data.error || '';
+  $('meta').innerHTML = data.intent
+    ? `intent <code>${esc(data.intent)}</code> · confidence <code>${data.confidence}</code> · ${state.rows.length} row(s)`
+    : '';
+  $('evidence').innerHTML = (data.evidence || []).map(e => `<li>${esc(e)}</li>`).join('');
+  $('results').innerHTML = renderRows(state.rows, data.intent);
+  $('sparqlOut').textContent = data.sparql || '—';
+  $('cypherOut').textContent = data.cypher || '—';
+  $('planOut').textContent = JSON.stringify(
+    {intent: data.intent, slots: data.slots, confidence: data.confidence, evidence: data.evidence,
+     graph_pattern: data.pattern}, null, 2);
+  document.querySelectorAll('#results .item').forEach(el => el.onclick = () => openNode(el.dataset.id));
+  showTab('answer');
+}
+
+function renderRows(rows, intent) {
+  if (!rows || !rows.length) return `<p class="empty">No results.</p>`;
+  const cardIntents = ['counters', 'rules', 'describe', 'requirements', 'compare', 'zone_responsibility', 'search'];
+  if (cardIntents.includes(intent)) return `<div class="cards">${rows.map(cardRow).join('')}</div>`;
+  const cols = Object.keys(rows[0]).filter(c => c !== 'definition');
+  const head = cols.map(c => `<th>${esc(c)}</th>`).join('');
+  const body = rows.map(r => '<tr>' + cols.map(c => {
+    const v = r[c];
+    const txt = Array.isArray(v) ? v.join(', ') : v;
+    return `<td class="wrap">${esc(txt)}</td>`;
+  }).join('') + '</tr>').join('');
+  return `<table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+}
+
+function cardRow(r) {
+  const title = r.label || r.name || r.id || '';
+  const kind = r.type || r.kind || r.side || r.relation || '';
+  const def = r.definition || r.rationale || r.summary || '';
+  const skip = new Set(['id', 'label', 'name', 'type', 'kind', 'definition', 'rationale', 'side', 'step', 'player', 'rule', 'zone', 'counter', 'assignment', 'requirement', 'relation']);
+  const kv = Object.entries(r).filter(([k, v]) => !skip.has(k) && v !== '' && v != null && (!Array.isArray(v) || v.length))
+    .map(([k, v]) => `<div>${esc(k)}</div><div>${esc(Array.isArray(v) ? v.join(', ') : v)}</div>`).join('');
+  const id = r.id || r.step || r.player || r.rule || r.zone || r.counter || r.assignment || r.requirement || '';
+  return `<div class="card"><h3>${esc(title)}</h3><div class="kind">${esc(kind)}</div>
+    ${def ? `<p>${esc(def)}</p>` : ''}${kv ? `<div class="kv">${kv}</div>` : ''}
+    ${id ? `<div style="margin-top:8px"><button class="ghost item" data-id="${esc(id)}">open ${esc(id)}</button></div>` : ''}</div>`;
+}
+
+/* ------------------------------------------------------------------ browse */
+async function browse() {
+  const params = new URLSearchParams({q: $('filter').value || 'zone', limit: '60'});
+  if ($('typeFilter').value) params.set('type', $('typeFilter').value);
+  const data = await (await fetch('/api/search?' + params.toString())).json();
+  $('browse').innerHTML = (data.rows || []).map(r =>
+    `<button class="item" data-id="${esc(r.id)}"><div class="t">${esc(r.type)}</div>${esc(r.label)}</button>`).join('')
+    || '<div class="empty">nothing found</div>';
+  $('browse').querySelectorAll('.item').forEach(el => el.onclick = () => openNode(el.dataset.id));
+}
+$('filter').oninput = debounce(browse, 220);
+$('typeFilter').onchange = browse;
+$('ask').onclick = () => run($('q').value);
+$('q').onkeydown = e => { if (e.key === 'Enter') run($('q').value); };
+function debounce(fn, ms) { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => fn(...a), ms); }; }
+
+/* ----------------------------------------------------------------- drawer */
+async function openNode(id) {
+  const data = await (await fetch('/api/node?id=' + encodeURIComponent(id))).json();
+  if (data.error) { $('drawerBody').innerHTML = `<p class="err">${esc(data.error)}</p>`; $('drawer').classList.add('open'); return; }
+  const rel = Object.entries(data.outgoing || {}).map(([p, targets]) =>
+    `<div class="rel"><h4>${esc(p)}</h4>${targets.map(t =>
+      `<span class="pill" data-id="${esc(t.id)}">${esc(t.label)}</span>`).join('')}</div>`).join('');
+  $('drawerBody').innerHTML = `
+    <h3>${esc(data.label)}</h3>
+    <div class="kind" style="color:var(--accent);font-size:11px;letter-spacing:.8px;text-transform:uppercase">${esc(data.type)}</div>
+    <p class="meta"><code>${esc(data.id)}</code></p>
+    ${data.definition ? `<p>${esc(data.definition)}</p>` : ''}
+    ${data.keys && data.keys.length ? `<ul class="keys">${data.keys.map(k => `<li>${esc(k)}</li>`).join('')}</ul>` : ''}
+    ${rel}
+    <div class="rel"><h4>Incoming (${(data.incoming || []).length})</h4>
+      ${(data.incoming || []).slice(0, 30).map(i => `<span class="pill" data-id="${esc(i.id)}">${esc(i.label)} <b>${esc(i.predicate)}</b></span>`).join('')}
+    </div>`;
+  $('drawerBody').querySelectorAll('.pill').forEach(el => el.onclick = () => openNode(el.dataset.id));
+  $('drawer').classList.add('open');
+}
+function closeDrawer() { $('drawer').classList.remove('open'); }
+
+/* ------------------------------------------------------------------ court */
+async function loadCourt() {
+  const params = new URLSearchParams();
+  if (state.scheme) params.set('scheme', state.scheme);
+  const data = await (await fetch('/api/court?' + params.toString())).json();
+  $('courtOut').textContent = data.court;
+  if (state.scheme) $('courtScheme').value = state.scheme;
+}
+$('courtScheme').onchange = e => { state.scheme = e.target.value || null; loadCourt(); };
+
+/* ------------------------------------------------------------------ graph */
+async function loadGraph() {
+  const params = new URLSearchParams({depth: $('graphDepth').value || '1'});
+  if (state.focus) params.set('focus', state.focus);
+  const data = await (await fetch('/api/graph?' + params.toString())).json();
+  state.nodes = data.nodes || []; state.links = data.links || [];
+  draw(state.nodes, state.links);
+  const counts = {};
+  state.nodes.forEach(n => counts[n.type] = (counts[n.type] || 0) + 1);
+  $('graphInfo').textContent = `${state.nodes.length} nodes · ${state.links.length} edges`;
+  $('graphLegend').innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1])
+    .map(([t, c]) => `<span><i style="background:${colorOf(t)}"></i>${esc(t)} ${c}</span>`).join('');
+}
+$('graphFocus').onchange = e => { state.focus = e.target.value || null; loadGraph(); };
+$('graphDepth').onchange = loadGraph;
+
+function draw(nodes, links) {
+  const svg = $('svg');
+  const w = svg.clientWidth || 900, h = svg.clientHeight || 520;
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  const ids = new Map(nodes.map(n => [n.id, n]));
+  const valid = links.filter(l => ids.has(l.source) && ids.has(l.target));
+
+  // deterministic-ish circular seed, then a small force simulation
+  nodes.forEach((n, i) => {
+    const a = (i / Math.max(nodes.length, 1)) * 2 * Math.PI;
+    n.x = w / 2 + Math.min(w, h) * 0.34 * Math.cos(a);
+    n.y = h / 2 + Math.min(w, h) * 0.34 * Math.sin(a);
+    n.vx = 0; n.vy = 0;
+  });
+  const deg = {};
+  valid.forEach(l => { deg[l.source] = (deg[l.source] || 0) + 1; deg[l.target] = (deg[l.target] || 0) + 1; });
+  for (let step = 0; step < 320; step++) {
+    const cool = 1 - step / 320;
+    for (let i = 0; i < nodes.length; i++) {
+      for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        let dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy || 0.01;
+        if (d2 > 62500) continue;
+        const f = 900 / d2;
+        const d = Math.sqrt(d2);
+        a.vx -= (dx / d) * f; a.vy -= (dy / d) * f;
+        b.vx += (dx / d) * f; b.vy += (dy / d) * f;
+      }
+    }
+    valid.forEach(l => {
+      const a = ids.get(l.source), b = ids.get(l.target);
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const f = (d - 70) * 0.012;
+      a.vx += (dx / d) * f; a.vy += (dy / d) * f;
+      b.vx -= (dx / d) * f; b.vy -= (dy / d) * f;
+    });
+    nodes.forEach(n => {
+      n.vx += (w / 2 - n.x) * 0.0025; n.vy += (h / 2 - n.y) * 0.0025;
+      n.x += n.vx * cool * 0.55; n.y += n.vy * cool * 0.55;
+      n.vx *= 0.82; n.vy *= 0.82;
+      const pad = 26;
+      n.x = Math.max(pad, Math.min(w - pad, n.x));
+      n.y = Math.max(pad, Math.min(h - pad, n.y));
+    });
+  }
+
+  const r = n => 4 + Math.min(9, Math.sqrt(deg[n.id] || 1) * 2.2);
+  svg.innerHTML =
+    `<g id="viewport">
+      ${valid.map(l => `<line x1="${ids.get(l.source).x.toFixed(1)}" y1="${ids.get(l.source).y.toFixed(1)}"
+          x2="${ids.get(l.target).x.toFixed(1)}" y2="${ids.get(l.target).y.toFixed(1)}"></line>`).join('')}
+      ${nodes.map(n => `<g class="node" data-id="${esc(n.id)}">
+          <circle cx="${n.x.toFixed(1)}" cy="${n.y.toFixed(1)}" r="${r(n)}" fill="${colorOf(n.type)}"></circle>
+          <text x="${(n.x + r(n) + 3).toFixed(1)}" y="${(n.y + 3).toFixed(1)}">${esc((n.label || n.id).slice(0, 28))}</text>
+        </g>`).join('')}
+    </g>`;
+  svg.querySelectorAll('.node').forEach(g => {
+    g.onclick = () => openNode(g.dataset.id);
+    g.querySelector('circle').onmousemove = ev => showTip(ev, g.dataset.id);
+  });
+  enablePanZoom(svg);
+}
+
+let tip = null;
+function showTip(ev, id) {
+  const n = state.nodes.find(x => x.id === id);
+  if (!n) return;
+  if (!tip) { tip = document.createElement('div'); tip.style.cssText =
+    'position:fixed;background:#0b1018;border:1px solid #2a3548;border-radius:8px;padding:6px 9px;font-size:12px;z-index:60;pointer-events:none;max-width:280px';
+    document.body.appendChild(tip); }
+  tip.innerHTML = `<b>${esc(n.label || n.id)}</b><br><span style="color:#94a3b8">${esc(n.type)}</span><br>${esc((n.definition || '').slice(0, 140))}`;
+  tip.style.left = (ev.clientX + 14) + 'px';
+  tip.style.top = (ev.clientY + 14) + 'px';
+}
+document.addEventListener('mousemove', e => { if (tip && e.target.tagName !== 'circle') tip.remove(), tip = null; });
+
+function enablePanZoom(svg) {
+  const g = svg.querySelector('#viewport');
+  let scale = 1, tx = 0, ty = 0, drag = null;
+  const apply = () => g.setAttribute('transform', `translate(${tx},${ty}) scale(${scale})`);
+  svg.onwheel = e => {
+    e.preventDefault();
+    const k = e.deltaY < 0 ? 1.12 : 1 / 1.12;
+    const rect = svg.getBoundingClientRect();
+    const mx = e.clientX - rect.left, my = e.clientY - rect.top;
+    tx = mx - (mx - tx) * k; ty = my - (my - ty) * k; scale *= k; apply();
+  };
+  svg.onmousedown = e => { if (e.target.tagName === 'circle') return; drag = {x: e.clientX, y: e.clientY}; svg.style.cursor = 'grabbing'; };
+  window.addEventListener('mouseup', () => { drag = null; svg.style.cursor = 'grab'; });
+  svg.onmousemove = e => {
+    if (!drag) return;
+    tx += e.clientX - drag.x; ty += e.clientY - drag.y;
+    drag = {x: e.clientX, y: e.clientY}; apply();
+  };
+}
+
+boot().catch(e => { $('summary').innerHTML = `<span class="err">${esc(e.message)}</span>`; });
+</script>
+</body>
+</html>
