@@ -13,6 +13,7 @@ Examples
 from __future__ import annotations
 
 import argparse
+import os
 import json as _json
 import sys
 from pathlib import Path
@@ -328,7 +329,14 @@ def build_parser() -> argparse.ArgumentParser:
 def main(argv: Optional[Sequence[str]] = None) -> int:
     args = build_parser().parse_args(argv)
     kg = load_graph(args.data)
-    return int(args.func(kg, args) or 0)
+    try:
+        return int(args.func(kg, args) or 0)
+    except BrokenPipeError:
+        # `... export -f jsonld | head -20` closes the pipe early; exit quietly
+        # instead of dumping a traceback (and silence the interpreter's own
+        # "Exception ignored" note at shutdown).
+        os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
+        return 0
 
 
 if __name__ == "__main__":  # pragma: no cover
