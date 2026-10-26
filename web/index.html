@@ -51,6 +51,9 @@
   }
   button.ghost { background: transparent; color: var(--text); border: 1px solid var(--line); }
   button.ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .lang { display: flex; gap: 4px; }
+  .langbtn { padding: 4px 9px; font-size: 11px; border-radius: 6px; color: var(--muted); }
+  .langbtn.active { border-color: var(--accent); color: var(--accent); }
   main { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 0; height: calc(100vh - 61px); }
   aside {
     border-right: 1px solid var(--line); background: var(--panel); overflow-y: auto; padding: 14px;
@@ -133,42 +136,47 @@
 </head>
 <body>
 <header>
-  <h1>Basketball Knowledge Model <span>· explorer</span></h1>
+  <h1>Basketball Knowledge Model <span data-i18n="nav.tag">· explorer</span></h1>
   <div class="badges" id="badges"></div>
+  <div class="lang">
+    <button class="ghost langbtn" data-lang="en" title="English">EN</button>
+    <button class="ghost langbtn" data-lang="fr" title="Français">FR</button>
+    <button class="ghost langbtn" data-lang="mg" title="Malagasy">MG</button>
+  </div>
   <div class="search">
-    <input id="q" type="text" placeholder="Ask: how do you attack a 2-3 zone?" autocomplete="off" />
-    <button id="ask">Ask</button>
+    <input id="q" type="text" data-i18n-ph="ask.placeholder" placeholder="Ask: how do you attack a 2-3 zone?" autocomplete="off" />
+    <button id="ask" data-i18n="ask.button">Ask</button>
   </div>
 </header>
 
 <main>
   <aside>
-    <h2>Example questions</h2>
+    <h2 data-i18n="aside.examples">Example questions</h2>
     <div id="examples"></div>
-    <h2>Browse</h2>
+    <h2 data-i18n="aside.browse">Browse</h2>
     <div class="flex" style="margin-bottom:8px">
       <select id="typeFilter" style="flex:1"></select>
     </div>
-    <input id="filter" type="text" placeholder="filter by name…" />
+    <input id="filter" type="text" data-i18n-ph="browse.placeholder" placeholder="filter by name…" />
     <div class="list" id="browse" style="margin-top:8px"></div>
-    <h2>Court</h2>
+    <h2 data-i18n="aside.court">Court</h2>
     <div id="schemes" style="margin-bottom:8px"></div>
-    <h2>Play graphs</h2>
+    <h2 data-i18n="aside.plays">Play graphs</h2>
     <div id="plays"></div>
   </aside>
 
   <section class="content">
     <div class="tabs">
-      <button class="tab active" data-tab="answer">Answer</button>
-      <button class="tab" data-tab="plan">Query plan</button>
+      <button class="tab active" data-tab="answer" data-i18n="tab.answer">Answer</button>
+      <button class="tab" data-tab="plan" data-i18n="tab.plan">Query plan</button>
       <button class="tab" data-tab="sparql">SPARQL</button>
       <button class="tab" data-tab="cypher">Cypher</button>
-      <button class="tab" data-tab="graph">Graph</button>
-      <button class="tab" data-tab="court">Court</button>
+      <button class="tab" data-tab="graph" data-i18n="tab.graph">Graph</button>
+      <button class="tab" data-tab="court" data-i18n="tab.court">Court</button>
     </div>
 
     <div class="panel active" id="panel-answer">
-      <p class="summary" id="summary">Ask a question, or pick one on the left.</p>
+      <p class="summary" id="summary" data-i18n="answer.empty">Ask a question, or pick one on the left.</p>
       <div class="meta" id="meta"></div>
       <ul class="evidence" id="evidence"></ul>
       <div id="results"></div>
@@ -180,8 +188,8 @@
       <div class="graphbar">
         <select id="graphFocus" style="max-width:320px"></select>
         <select id="graphDepth">
-          <option value="1">depth 1</option>
-          <option value="2">depth 2</option>
+          <option value="1" data-i18n="depth.1">depth 1</option>
+          <option value="2" data-i18n="depth.2">depth 2</option>
         </select>
         <span id="graphInfo"></span>
       </div>
@@ -196,7 +204,7 @@
 </main>
 
 <div class="drawer" id="drawer">
-  <button class="ghost close" onclick="closeDrawer()">close</button>
+  <button class="ghost close" data-i18n="drawer.close" onclick="closeDrawer()">close</button>
   <div id="drawerBody"></div>
 </div>
 
@@ -218,20 +226,137 @@ const colorOf = t => TYPE_COLORS[t] || '#94a3b8';
 const $ = id => document.getElementById(id);
 const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
+/* --------------------------------------------------- i18n: interface chrome */
+/* UI navigation only. Basketball & graph terminology ("pick and roll", "drop
+   coverage", "scheme", "nodes", "edges", intent names, dataset content…)
+   deliberately stays in English in every language. Kept in strict-JSON syntax
+   so tests can parse it and verify that all languages define the same keys. */
+const I18N = {
+  "en": {
+    "nav.tag": "· explorer",
+    "ask.placeholder": "Ask: how do you attack a 2-3 zone?",
+    "ask.button": "Ask",
+    "aside.examples": "Example questions",
+    "aside.browse": "Browse",
+    "browse.placeholder": "filter by name…",
+    "browse.allTypes": "all types",
+    "aside.court": "Court",
+    "aside.plays": "Play graphs",
+    "tab.answer": "Answer",
+    "tab.plan": "Query plan",
+    "tab.graph": "Graph",
+    "tab.court": "Court",
+    "answer.empty": "Ask a question, or pick one on the left.",
+    "depth.1": "depth 1",
+    "depth.2": "depth 2",
+    "graph.whole": "— whole graph (top 220) —",
+    "scheme.none": "— no scheme —",
+    "drawer.close": "close",
+    "drawer.incoming": "Incoming",
+    "results.none": "No results.",
+    "results.open": "open",
+    "browse.nothing": "nothing found",
+    "meta.confidence": "confidence",
+    "meta.rows": "row(s)"
+  },
+  "fr": {
+    "nav.tag": "· explorateur",
+    "ask.placeholder": "Posez une question : how do you attack a 2-3 zone?",
+    "ask.button": "Demander",
+    "aside.examples": "Exemples de questions",
+    "aside.browse": "Parcourir",
+    "browse.placeholder": "filtrer par nom…",
+    "browse.allTypes": "tous les types",
+    "aside.court": "Terrain",
+    "aside.plays": "Graphes de plays",
+    "tab.answer": "Réponse",
+    "tab.plan": "Plan de requête",
+    "tab.graph": "Graphe",
+    "tab.court": "Terrain",
+    "answer.empty": "Posez une question, ou choisissez-en une à gauche.",
+    "depth.1": "profondeur 1",
+    "depth.2": "profondeur 2",
+    "graph.whole": "— graphe entier (220 max) —",
+    "scheme.none": "— sans scheme —",
+    "drawer.close": "fermer",
+    "drawer.incoming": "Entrants",
+    "results.none": "Aucun résultat.",
+    "results.open": "ouvrir",
+    "browse.nothing": "aucun résultat",
+    "meta.confidence": "confiance",
+    "meta.rows": "ligne(s)"
+  },
+  "mg": {
+    "nav.tag": "· mpitsidika",
+    "ask.placeholder": "Manontania: how do you attack a 2-3 zone?",
+    "ask.button": "Manontania",
+    "aside.examples": "Fanontaniana ohatra",
+    "aside.browse": "Fikarohana",
+    "browse.placeholder": "sivana araka ny anarana…",
+    "browse.allTypes": "karazana rehetra",
+    "aside.court": "Kianja",
+    "aside.plays": "Play graphs",
+    "tab.answer": "Valiny",
+    "tab.plan": "Drafitra fanontaniana",
+    "tab.graph": "Graph",
+    "tab.court": "Kianja",
+    "answer.empty": "Manontania fanontaniana, na safidio ny iray eo ankavia.",
+    "depth.1": "halalina 1",
+    "depth.2": "halalina 2",
+    "graph.whole": "— graph manontolo (220 fara-taminy) —",
+    "scheme.none": "— tsy misy scheme —",
+    "drawer.close": "akatona",
+    "drawer.incoming": "Miditra",
+    "results.none": "Tsy misy valiny.",
+    "results.open": "sokafy",
+    "browse.nothing": "tsy nisy hita",
+    "meta.confidence": "fahatokisana",
+    "meta.rows": "valiny"
+  }
+};
+
+let LANG = "en";
+try {
+  const saved = localStorage.getItem("bkg.lang");
+  const nav = (navigator.language || "").toLowerCase();
+  LANG = saved && I18N[saved] ? saved
+    : nav.startsWith("fr") ? "fr"
+    : nav.startsWith("mg") ? "mg" : "en";
+} catch (e) { /* private mode etc. */ }
+
+const t = key => (I18N[LANG] && I18N[LANG][key]) || I18N.en[key] || key;
+
+function applyLang() {
+  document.documentElement.lang = LANG;
+  document.querySelectorAll("[data-i18n]").forEach(el => el.textContent = t(el.dataset.i18n));
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => el.placeholder = t(el.dataset.i18nPh));
+  document.querySelectorAll(".langbtn").forEach(b => b.classList.toggle("active", b.dataset.lang === LANG));
+  if (!state.intent) $("summary").textContent = t("answer.empty");
+  if (state.examples) fillSelects();
+}
+function setLang(lang) {
+  if (!I18N[lang]) return;
+  LANG = lang;
+  try { localStorage.setItem("bkg.lang", lang); } catch (e) { /* ignore */ }
+  applyLang();
+}
+document.querySelectorAll(".langbtn").forEach(b => b.onclick = () => setLang(b.dataset.lang));
+applyLang();
+
 /* ------------------------------------------------------------------ chrome */
 async function boot() {
   const stats = await (await fetch('/api/stats')).json();
+  state.stats = stats;
   $('badges').innerHTML = [
     ['nodes', stats.nodes], ['edges', stats.edges], ['datasets', stats.datasets.length],
     ['types', Object.keys(stats.node_types).length]
   ].map(([k, v]) => `<span class="badge">${k} <b>${v}</b></span>`).join('');
 
   const ex = await (await fetch('/api/examples')).json();
+  state.examples = ex;
   $('examples').innerHTML = ex.questions.map(q => `<span class="chip">${esc(q)}</span>`).join('');
   $('examples').onclick = e => { if (e.target.classList.contains('chip')) run(e.target.textContent); };
 
-  $('schemes').innerHTML = [{id:'', label:'— no scheme —'}, ...ex.schemes]
-    .map(s => `<span class="chip" data-scheme="${esc(s.id)}">${esc(s.label)}</span>`).join('');
   $('schemes').onclick = e => {
     if (!e.target.dataset.scheme) return;
     state.scheme = e.target.dataset.scheme || null;
@@ -245,18 +370,36 @@ async function boot() {
     showTab('graph'); loadGraph();
   };
 
-  const types = ['', ...stats.types];
-  $('typeFilter').innerHTML = types.map(t => `<option value="${esc(t)}">${t || 'all types'}</option>`).join('');
-  $('graphFocus').innerHTML = ex.plays.concat([{id:'scheme:zone-2-3', label:'Zone 2-3 (scheme)'},
-      {id:'coverage:drop', label:'Drop coverage'}, {id:'arch:rim-protector', label:'Rim protector'}])
-    .map(p => `<option value="${esc(p.id)}">${esc(p.label)}</option>`).join('') +
-    `<option value="">— whole graph (top 220) —</option>`;
-  $('courtScheme').innerHTML = [{id:'', label:'— no scheme —'}, ...ex.schemes]
-    .map(s => `<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('');
-
+  fillSelects();
   browse();
   loadGraph();
   loadCourt();
+}
+
+/* Lang-dependent parts of the selects/chips; re-run on every language switch.
+   "scheme", play/coverage labels etc. are technical terms and stay in English. */
+function fillSelects() {
+  const ex = state.examples, st = state.stats;
+  if (!ex || !st) return;
+  const focusVal = $('graphFocus').value || state.focus || '';
+  $('graphFocus').innerHTML = ex.plays.concat([{id:'scheme:zone-2-3', label:'Zone 2-3 (scheme)'},
+      {id:'coverage:drop', label:'Drop coverage'}, {id:'arch:rim-protector', label:'Rim protector'}])
+    .map(p => `<option value="${esc(p.id)}">${esc(p.label)}</option>`).join('') +
+    `<option value="">${esc(t('graph.whole'))}</option>`;
+  $('graphFocus').value = focusVal;
+
+  const schemeVal = $('courtScheme').value || state.scheme || '';
+  $('courtScheme').innerHTML = [{id:'', label:t('scheme.none')}, ...ex.schemes]
+    .map(s => `<option value="${esc(s.id)}">${esc(s.label)}</option>`).join('');
+  $('courtScheme').value = schemeVal;
+
+  const typeVal = $('typeFilter').value;
+  $('typeFilter').innerHTML = `<option value="">${esc(t('browse.allTypes'))}</option>` +
+    st.types.map(ty => `<option value="${esc(ty)}">${esc(ty)}</option>`).join('');
+  $('typeFilter').value = typeVal;
+
+  $('schemes').innerHTML = [{id:'', label:t('scheme.none')}, ...ex.schemes]
+    .map(s => `<span class="chip" data-scheme="${esc(s.id)}">${esc(s.label)}</span>`).join('');
 }
 
 document.querySelectorAll('.tab').forEach(t => t.onclick = () => showTab(t.dataset.tab));
@@ -274,7 +417,7 @@ async function run(question) {
   state.rows = data.rows || []; state.intent = data.intent;
   $('summary').textContent = data.summary || data.error || '';
   $('meta').innerHTML = data.intent
-    ? `intent <code>${esc(data.intent)}</code> · confidence <code>${data.confidence}</code> · ${state.rows.length} row(s)`
+    ? `intent <code>${esc(data.intent)}</code> · ${t('meta.confidence')} <code>${data.confidence}</code> · ${state.rows.length} ${t('meta.rows')}`
     : '';
   $('evidence').innerHTML = (data.evidence || []).map(e => `<li>${esc(e)}</li>`).join('');
   $('results').innerHTML = renderRows(state.rows, data.intent);
@@ -288,7 +431,7 @@ async function run(question) {
 }
 
 function renderRows(rows, intent) {
-  if (!rows || !rows.length) return `<p class="empty">No results.</p>`;
+  if (!rows || !rows.length) return `<p class="empty">${esc(t('results.none'))}</p>`;
   const cardIntents = ['counters', 'rules', 'describe', 'requirements', 'compare', 'zone_responsibility', 'search'];
   if (cardIntents.includes(intent)) return `<div class="cards">${rows.map(cardRow).join('')}</div>`;
   const cols = Object.keys(rows[0]).filter(c => c !== 'definition');
@@ -311,7 +454,7 @@ function cardRow(r) {
   const id = r.id || r.step || r.player || r.rule || r.zone || r.counter || r.assignment || r.requirement || '';
   return `<div class="card"><h3>${esc(title)}</h3><div class="kind">${esc(kind)}</div>
     ${def ? `<p>${esc(def)}</p>` : ''}${kv ? `<div class="kv">${kv}</div>` : ''}
-    ${id ? `<div style="margin-top:8px"><button class="ghost item" data-id="${esc(id)}">open ${esc(id)}</button></div>` : ''}</div>`;
+    ${id ? `<div style="margin-top:8px"><button class="ghost item" data-id="${esc(id)}">${esc(t('results.open'))} ${esc(id)}</button></div>` : ''}</div>`;
 }
 
 /* ------------------------------------------------------------------ browse */
@@ -321,7 +464,7 @@ async function browse() {
   const data = await (await fetch('/api/search?' + params.toString())).json();
   $('browse').innerHTML = (data.rows || []).map(r =>
     `<button class="item" data-id="${esc(r.id)}"><div class="t">${esc(r.type)}</div>${esc(r.label)}</button>`).join('')
-    || '<div class="empty">nothing found</div>';
+    || `<div class="empty">${esc(t('browse.nothing'))}</div>`;
   $('browse').querySelectorAll('.item').forEach(el => el.onclick = () => openNode(el.dataset.id));
 }
 $('filter').oninput = debounce(browse, 220);
@@ -335,8 +478,8 @@ async function openNode(id) {
   const data = await (await fetch('/api/node?id=' + encodeURIComponent(id))).json();
   if (data.error) { $('drawerBody').innerHTML = `<p class="err">${esc(data.error)}</p>`; $('drawer').classList.add('open'); return; }
   const rel = Object.entries(data.outgoing || {}).map(([p, targets]) =>
-    `<div class="rel"><h4>${esc(p)}</h4>${targets.map(t =>
-      `<span class="pill" data-id="${esc(t.id)}">${esc(t.label)}</span>`).join('')}</div>`).join('');
+    `<div class="rel"><h4>${esc(p)}</h4>${targets.map(tg =>
+      `<span class="pill" data-id="${esc(tg.id)}">${esc(tg.label)}</span>`).join('')}</div>`).join('');
   $('drawerBody').innerHTML = `
     <h3>${esc(data.label)}</h3>
     <div class="kind" style="color:var(--accent);font-size:11px;letter-spacing:.8px;text-transform:uppercase">${esc(data.type)}</div>
@@ -344,7 +487,7 @@ async function openNode(id) {
     ${data.definition ? `<p>${esc(data.definition)}</p>` : ''}
     ${data.keys && data.keys.length ? `<ul class="keys">${data.keys.map(k => `<li>${esc(k)}</li>`).join('')}</ul>` : ''}
     ${rel}
-    <div class="rel"><h4>Incoming (${(data.incoming || []).length})</h4>
+    <div class="rel"><h4>${esc(t('drawer.incoming'))} (${(data.incoming || []).length})</h4>
       ${(data.incoming || []).slice(0, 30).map(i => `<span class="pill" data-id="${esc(i.id)}">${esc(i.label)} <b>${esc(i.predicate)}</b></span>`).join('')}
     </div>`;
   $('drawerBody').querySelectorAll('.pill').forEach(el => el.onclick = () => openNode(el.dataset.id));
@@ -373,7 +516,7 @@ async function loadGraph() {
   state.nodes.forEach(n => counts[n.type] = (counts[n.type] || 0) + 1);
   $('graphInfo').textContent = `${state.nodes.length} nodes · ${state.links.length} edges`;
   $('graphLegend').innerHTML = Object.entries(counts).sort((a, b) => b[1] - a[1])
-    .map(([t, c]) => `<span><i style="background:${colorOf(t)}"></i>${esc(t)} ${c}</span>`).join('');
+    .map(([ty, c]) => `<span><i style="background:${colorOf(ty)}"></i>${esc(ty)} ${c}</span>`).join('');
 }
 $('graphFocus').onchange = e => { state.focus = e.target.value || null; loadGraph(); };
 $('graphDepth').onchange = loadGraph;

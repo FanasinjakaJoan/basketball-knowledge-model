@@ -1,9 +1,10 @@
 """Tests for the web explorer's API layer (no sockets: the handlers are tested directly)."""
 
 import json
+import re
 import unittest
 
-from basketball_kg.serve import KnowledgeGraphServer
+from basketball_kg.serve import WEB_DIR, KnowledgeGraphServer
 
 
 class TestApi(unittest.TestCase):
@@ -86,6 +87,47 @@ class TestApi(unittest.TestCase):
         for payload in (self.app.stats(), self.app.ask("what beats drop coverage?"),
                         self.app.graph(focus="play:motion-offense"), self.app.examples()):
             json.dumps(payload, ensure_ascii=False)
+
+
+class TestIndexI18n(unittest.TestCase):
+    """The explorer's navigation ships in English, French and Malagasy.
+
+    Basketball / graph terminology stays English by design; these tests only
+    guarantee that the *chrome* dictionary is well-formed and complete.
+    """
+
+    @classmethod
+    def setUpClass(cls):
+        cls.html = (WEB_DIR / "index.html").read_text(encoding="utf-8")
+
+    def _dictionary(self):
+        match = re.search(r"const I18N = (\{.*?\n\});", self.html, re.S)
+        self.assertIsNotNone(match, "const I18N dictionary not found in index.html")
+        return json.loads(match.group(1))  # strict JSON: fails on trailing commas etc.
+
+    def test_dictionary_has_matching_key_sets(self):
+        i18n = self._dictionary()
+        self.assertLessEqual({"en", "fr", "mg"}, set(i18n),
+                             "navigation must exist in English, French and Malagasy")
+        keysets = {frozenset(keys) for keys in i18n.values()}
+        self.assertEqual(len(keysets), 1, "all languages must define the same key set")
+
+    def test_every_used_key_is_defined(self):
+        i18n = self._dictionary()
+        used = set(re.findall(r'data-i18n(?:-ph)?="([^"]+)"', self.html))
+        used |= set(re.findall(r't\("([^"]+)"\)', self.html))
+        missing = used - set(i18n["en"])
+        self.assertEqual(missing, set(), f"i18n keys used in markup/JS but undefined: {sorted(missing)}")
+
+    def test_technical_terms_stay_english(self):
+        """The instruction: technical terms in English, navigation localized."""
+        i18n = self._dictionary()
+        for lang in ("fr", "mg"):
+            self.assertEqual(i18n[lang]["ask.placeholder"].split(":")[-1].strip(),
+                             i18n["en"]["ask.placeholder"].split(":")[-1].strip(),
+                             "the example tactical question must not be translated")
+            self.assertIn("scheme", i18n[lang]["scheme.none"],
+                          "'scheme' is a technical term and must stay English")
 
 
 if __name__ == "__main__":
