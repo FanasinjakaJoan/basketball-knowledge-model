@@ -1,0 +1,411 @@
+@prefix bk:      <https://w3id.org/basketball-kg/ontology#> .
+@prefix dcterms: <http://purl.org/dc/terms/> .
+@prefix owl:     <http://www.w3.org/2002/07/owl#> .
+@prefix rdf:     <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:    <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix skos:    <http://www.w3.org/2004/02/skos/core#> .
+@prefix xsd:     <http://www.w3.org/2001/XMLSchema#> .
+
+# ---------------------------------------------------------------------------
+# Basketball Knowledge Model (BKM) -- TBox only.
+# Individuals (players, plays, zones, schemes, ...) live in ../data/*.json and
+# are materialised into RDF by basketball_kg.rdf.build_rdf_graph().
+# ---------------------------------------------------------------------------
+
+<https://w3id.org/basketball-kg/ontology> a owl:Ontology ;
+    owl:versionIRI <https://w3id.org/basketball-kg/0.1.0/ontology> ;
+    owl:versionInfo "0.1.0" ;
+    dcterms:title "Basketball Knowledge Model (BKM)" ;
+    dcterms:creator "Fanasinjaka Joan" ;
+    dcterms:license <https://opensource.org/licenses/MIT> ;
+    dcterms:description """
+    A lightweight OWL/RDFS vocabulary for modelling basketball knowledge: player
+    positions, functional roles and archetypes; the spatial court model; tactical
+    schemes, formations and defensive coverages; play graphs (ordered actions with
+    decision points); game situations; and the rules of the game that constrain
+    every action. Designed to be usable as an RDF graph (SPARQL) or as a labelled
+    property graph (Cypher / NetworkX).
+    """ .
+
+# ===========================  C L A S S E S  ================================
+
+bk:Concept a owl:Class ;
+    skos:prefLabel "Concept" ;
+    skos:definition "Root class of every basketball knowledge entity." .
+
+### --- People & organisations ---
+bk:Agent a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Agent" ;
+    skos:definition "A human participant: a player or a coach." .
+
+bk:Player a owl:Class ; rdfs:subClassOf bk:Agent ;
+    skos:prefLabel "Player" ;
+    skos:definition "An individual athlete who occupies a position and executes actions." .
+
+bk:Coach a owl:Class ; rdfs:subClassOf bk:Agent ;
+    skos:prefLabel "Coach" ;
+    skos:definition "The individual responsible for installing schemes and managing a roster." .
+
+bk:Team a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Team" ;
+    skos:definition "A club that rosters players and employs a coaching staff." .
+
+### --- Player taxonomy ---
+bk:PositionGroup a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Position group" ;
+    skos:definition "A family of nominal positions: Guard, Wing, Big." .
+
+bk:Position a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Position" ;
+    skos:definition "A nominal floor position (PG, SG, SF, PF, C) in the traditional numbering system." ;
+    rdfs:comment "Nominal positions are a roster convention; bk:Role carries the functional meaning." .
+
+bk:Role a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Role" ;
+    skos:definition "A position-agnostic functional job inside a scheme: ball handler, screener, roll man, nail defender, ..." .
+
+bk:Archetype a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Player archetype" ;
+    skos:definition "A reproducible bundle of skills, tendencies and match-up consequences (rim-runner, stretch big, 3-and-D wing, ...)." .
+
+bk:Skill a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Skill" ;
+    skos:definition "An atomic, trainable capability required by an archetype or an action." .
+
+### --- Space ---
+bk:Zone a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Zone" ;
+    skos:definition "A named region of the half court used to describe spacing, assignment and shot value." .
+
+bk:ZoneType a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Zone type" ;
+    skos:definition "Classification of a zone: paint, post, mid-range, three-point, backcourt." .
+
+### --- Tactics ---
+bk:Scheme a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Scheme" ;
+    skos:definition "A repeatable team-level system of organisation (motion offense, 2-3 zone, switch-all, ...)." .
+
+bk:OffensiveScheme a owl:Class ; rdfs:subClassOf bk:Scheme ;
+    skos:prefLabel "Offensive scheme" ;
+    skos:definition "A team system for generating shots while in possession." .
+
+bk:DefensiveScheme a owl:Class ; rdfs:subClassOf bk:Scheme ;
+    skos:prefLabel "Defensive scheme" ;
+    skos:definition "A team system for preventing shots and ending the possession with a rebound or a turnover." .
+
+bk:Coverage a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Ball-screen coverage" ;
+    skos:definition "The two-defender response to a ball screen: drop, at-the-level, show/hedge, blitz, switch, ICE." .
+
+bk:Formation a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Formation" ;
+    skos:definition "The starting spatial alignment of the five offensive players (5-out, 4-out-1-in, Horns, ...)." .
+
+bk:Play a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Play" ;
+    skos:definition "An ordered, goal-directed graph of actions, decision points and outcomes." .
+
+bk:OffensivePlay a owl:Class ; rdfs:subClassOf bk:Play .
+bk:DefensivePlay a owl:Class ; rdfs:subClassOf bk:Play .
+
+bk:Action a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Action" ;
+    skos:definition "A single executed step of a play: who does what, where, under which constraints." .
+
+bk:ActionType a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Action type" ;
+    skos:definition "The reusable verb vocabulary: set-on-ball-screen, roll-to-rim, skip-pass, rotate, ..." .
+
+bk:Decision a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Decision point" ;
+    skos:definition "A branch in a play: a read of the defence that selects the next action." .
+
+bk:Assignment a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Assignment" ;
+    skos:definition "Reified coverage duty: in a given scheme, a role is responsible for a zone or an opponent." .
+
+bk:Counter a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Counter" ;
+    skos:definition "A tactical answer to a scheme, action or coverage, exploiting a specific vulnerability." .
+
+bk:Outcome a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Outcome" ;
+    skos:definition "The result an action or play is designed to produce (rim attempt, corner three, turnover, ...)." .
+
+bk:Situation a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Game situation" ;
+    skos:definition "The context in which a scheme or play applies: transition, late clock, BLOB, clutch, ..." .
+
+### --- Rules ---
+bk:Rule a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Rule" ;
+    skos:definition "A law, dimension or officiating interpretation of the game that constrains an action." .
+
+bk:RuleType a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Rule type" ;
+    skos:definition "Offensive, defensive, timing, court dimension or equipment rule." .
+
+bk:Penalty a owl:Class ; rdfs:subClassOf bk:Concept ;
+    skos:prefLabel "Penalty" ;
+    skos:definition "The sanction attached to a rule violation." .
+
+# ========================  O B J E C T   P R O P E R T I E S  ===============
+
+### --- roster ---
+bk:playsFor a owl:ObjectProperty ;
+    rdfs:domain bk:Player ; rdfs:range bk:Team ;
+    skos:prefLabel "plays for" .
+
+bk:coachesTeam a owl:ObjectProperty ;
+    rdfs:domain bk:Coach ; rdfs:range bk:Team ;
+    skos:prefLabel "coaches" .
+
+bk:occupiesPosition a owl:ObjectProperty ;
+    rdfs:domain bk:Player ; rdfs:range bk:Position ;
+    skos:prefLabel "occupies position" .
+
+bk:belongsToGroup a owl:ObjectProperty ;
+    rdfs:domain bk:Position ; rdfs:range bk:PositionGroup ;
+    skos:prefLabel "belongs to group" .
+
+bk:hasArchetype a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Player bk:Position) ] ; rdfs:range bk:Archetype ;
+    skos:prefLabel "has archetype" .
+
+bk:typicalPosition a owl:ObjectProperty ;
+    rdfs:domain bk:Archetype ; rdfs:range bk:Position ;
+    skos:prefLabel "typical position" ;
+    skos:definition "The nominal position at which an archetype is most commonly deployed." .
+
+bk:installs a owl:ObjectProperty ;
+    rdfs:domain bk:Coach ; rdfs:range bk:Scheme ;
+    skos:prefLabel "installs" ;
+    skos:definition "The coaching staff installs a scheme as part of the team's system." .
+
+bk:hasRole a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Player bk:Position bk:Archetype) ] ; rdfs:range bk:Role ;
+    skos:prefLabel "has role" ;
+    skos:definition "Links a person, position or archetype to the functional job it performs." .
+
+bk:requires a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Archetype bk:Action bk:ActionType bk:Role bk:Play bk:Scheme) ] ;
+    rdfs:range [ a owl:Class ; owl:unionOf (bk:Skill bk:Archetype) ] ;
+    skos:prefLabel "requires" .
+
+bk:strongAgainst a owl:ObjectProperty ;
+    rdfs:domain bk:Archetype ; rdfs:range bk:Archetype ;
+    skos:prefLabel "strong against" .
+
+bk:vulnerableTo a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Archetype bk:Scheme bk:Coverage) ] ;
+    rdfs:range [ a owl:Class ; owl:unionOf (bk:Archetype bk:Scheme bk:Coverage bk:Action) ] ;
+    skos:prefLabel "vulnerable to" .
+
+### --- spatial ---
+bk:hasZoneType a owl:ObjectProperty ;
+    rdfs:domain bk:Zone ; rdfs:range bk:ZoneType ;
+    skos:prefLabel "has zone type" .
+
+bk:adjacentTo a owl:ObjectProperty, owl:SymmetricProperty ;
+    rdfs:domain bk:Zone ; rdfs:range bk:Zone ;
+    skos:prefLabel "adjacent to" ;
+    skos:definition "One pass away / spatially contiguous: the basic connectivity of the spacing graph." .
+
+bk:partOf a owl:ObjectProperty ;
+    rdfs:domain bk:Zone ; rdfs:range bk:Zone ;
+    skos:prefLabel "part of" ;
+    skos:definition "Mereological containment between zones (restricted area part of the paint)." .
+
+bk:occursIn a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Action bk:Play bk:Assignment bk:Rule) ] ; rdfs:range bk:Zone ;
+    skos:prefLabel "occurs in" .
+
+bk:startsIn a owl:ObjectProperty ;
+    rdfs:domain bk:Action ; rdfs:range bk:Zone ;
+    skos:prefLabel "starts in" .
+
+bk:endsIn a owl:ObjectProperty ;
+    rdfs:domain bk:Action ; rdfs:range bk:Zone ;
+    skos:prefLabel "ends in" .
+
+### --- play structure ---
+bk:hasStep a owl:ObjectProperty ;
+    rdfs:domain bk:Play ; rdfs:range bk:Action ;
+    skos:prefLabel "has step" .
+
+bk:stepOf a owl:ObjectProperty ; owl:inverseOf bk:hasStep ;
+    skos:prefLabel "step of" .
+
+bk:precedes a owl:ObjectProperty ;
+    rdfs:domain bk:Action ; rdfs:range bk:Action ;
+    skos:prefLabel "precedes" ;
+    skos:definition "Temporal/functional ordering inside a play." .
+
+bk:actor a owl:ObjectProperty ;
+    rdfs:domain bk:Action ; rdfs:range [ a owl:Class ; owl:unionOf (bk:Role bk:Position bk:Player) ] ;
+    skos:prefLabel "actor" ;
+    skos:definition "Who executes the action." .
+
+bk:target a owl:ObjectProperty ;
+    rdfs:domain bk:Action ; rdfs:range [ a owl:Class ; owl:unionOf (bk:Role bk:Position bk:Player bk:Zone) ] ;
+    skos:prefLabel "target" ;
+    skos:definition "Who or what the action is directed at (the recipient, the defender screened, the area attacked)." .
+
+bk:hasActionType a owl:ObjectProperty ;
+    rdfs:domain bk:Action ; rdfs:range bk:ActionType ;
+    skos:prefLabel "has action type" .
+
+bk:hasDecision a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Play bk:Action) ] ; rdfs:range bk:Decision ;
+    skos:prefLabel "has decision" .
+
+bk:condition a owl:ObjectProperty ;
+    rdfs:domain bk:Decision ; rdfs:range [ a owl:Class ; owl:unionOf (bk:Coverage bk:Action bk:Situation) ] ;
+    skos:prefLabel "condition" ;
+    skos:definition "The defensive read that triggers the branch." .
+
+bk:selectedOption a owl:ObjectProperty ;
+    rdfs:domain bk:Decision ; rdfs:range [ a owl:Class ; owl:unionOf (bk:Action bk:Play bk:ActionType) ] ;
+    skos:prefLabel "selected option" .
+
+bk:produces a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Action bk:Play bk:Scheme) ] ; rdfs:range bk:Outcome ;
+    skos:prefLabel "produces" .
+
+bk:executes a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Player bk:Position bk:Role) ] ;
+    rdfs:range [ a owl:Class ; owl:unionOf (bk:Action bk:Play bk:Scheme) ] ;
+    skos:prefLabel "executes" .
+
+### --- schemes / defence ---
+bk:appliesIn a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Scheme bk:Play bk:Coverage) ] ; rdfs:range bk:Situation ;
+    skos:prefLabel "applies in" .
+
+bk:hasCoverage a owl:ObjectProperty ;
+    rdfs:domain bk:DefensiveScheme ; rdfs:range bk:Coverage ;
+    skos:prefLabel "has ball-screen coverage" .
+
+bk:hasFormation a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:OffensiveScheme bk:OffensivePlay bk:DefensiveScheme) ] ;
+    rdfs:range bk:Formation ;
+    skos:prefLabel "has formation" .
+
+bk:hasAssignment a owl:ObjectProperty ;
+    rdfs:domain bk:DefensiveScheme ; rdfs:range bk:Assignment ;
+    skos:prefLabel "has assignment" .
+
+bk:ofScheme a owl:ObjectProperty ;
+    rdfs:domain bk:Assignment ; rdfs:range bk:DefensiveScheme ;
+    skos:prefLabel "of scheme" .
+
+bk:coversZone a owl:ObjectProperty ;
+    rdfs:domain bk:Assignment ; rdfs:range bk:Zone ;
+    skos:prefLabel "covers zone" .
+
+bk:heldBy a owl:ObjectProperty ;
+    rdfs:domain bk:Assignment ; rdfs:range [ a owl:Class ; owl:unionOf (bk:Role bk:Position) ] ;
+    skos:prefLabel "held by" .
+
+bk:defends a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Role bk:Position bk:Player) ] ;
+    rdfs:range [ a owl:Class ; owl:unionOf (bk:Role bk:Position bk:Player bk:Zone) ] ;
+    skos:prefLabel "defends" .
+
+bk:hasCounter a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Scheme bk:Coverage bk:Play bk:Action bk:Archetype) ] ;
+    rdfs:range bk:Counter ;
+    skos:prefLabel "has counter" .
+
+bk:counteredBy a owl:ObjectProperty, owl:SymmetricProperty ;
+    skos:prefLabel "countered by" ;
+    skos:definition "Symmetric tactical opposition between two schemes, coverages or actions." .
+
+bk:exploits a owl:ObjectProperty ;
+    rdfs:domain bk:Counter ; rdfs:range [ a owl:Class ; owl:unionOf (bk:Scheme bk:Coverage bk:Zone bk:Action) ] ;
+    skos:prefLabel "exploits" ;
+    skos:definition "The specific weakness the counter attacks (a zone, a coverage, a misalignment)." .
+
+bk:answers a owl:ObjectProperty ;
+    rdfs:domain bk:Counter ; rdfs:range [ a owl:Class ; owl:unionOf (bk:Scheme bk:Coverage bk:Play bk:Action) ] ;
+    skos:prefLabel "answers" .
+
+### --- rules ---
+bk:constrainedBy a owl:ObjectProperty ;
+    rdfs:domain [ a owl:Class ; owl:unionOf (bk:Action bk:ActionType bk:Play bk:Scheme bk:Assignment) ] ;
+    rdfs:range bk:Rule ;
+    skos:prefLabel "constrained by" .
+
+bk:governs a owl:ObjectProperty ; owl:inverseOf bk:constrainedBy ;
+    rdfs:domain bk:Rule ;
+    skos:prefLabel "governs" .
+
+bk:hasRuleType a owl:ObjectProperty ;
+    rdfs:domain bk:Rule ; rdfs:range bk:RuleType ;
+    skos:prefLabel "has rule type" .
+
+bk:hasPenalty a owl:ObjectProperty ;
+    rdfs:domain bk:Rule ; rdfs:range bk:Penalty ;
+    skos:prefLabel "has penalty" .
+
+bk:relatedTo a owl:ObjectProperty ;
+    skos:prefLabel "related to" ;
+    skos:definition "Loose, non-committal associative link used for browsing and recall." .
+
+# =====================  D A T A   P R O P E R T I E S  ======================
+
+bk:abbreviation a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    skos:prefLabel "abbreviation" .
+bk:aliases a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    skos:prefLabel "alias" .
+bk:order a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    skos:prefLabel "order" .
+bk:shotValue a owl:DatatypeProperty ; rdfs:range xsd:integer ;
+    skos:prefLabel "shot value" ;
+    skos:definition "Points awarded for a made field goal attempted from the zone." .
+bk:courtX a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    skos:prefLabel "court x" ;
+    skos:definition "Feet from the left sideline on a 50 ft wide court (baseline-centre origin model: x = 0 at the left sideline, y = 0 at the baseline, y grows towards half court). " .
+bk:courtY a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    skos:prefLabel "court y" .
+bk:courtSide a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    skos:prefLabel "court side" .
+bk:distanceFromRimFt a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    skos:prefLabel "distance from rim (ft)" .
+bk:key a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    skos:prefLabel "coaching key" .
+bk:note a owl:DatatypeProperty ; rdfs:range xsd:string ; skos:prefLabel "note" .
+bk:rationale a owl:DatatypeProperty ; rdfs:range xsd:string ; skos:prefLabel "rationale" .
+bk:vulnerability a owl:DatatypeProperty ; rdfs:range xsd:string ; skos:prefLabel "vulnerability" .
+bk:severity a owl:DatatypeProperty ; rdfs:range xsd:string ; skos:prefLabel "severity" .
+bk:penaltyText a owl:DatatypeProperty ; rdfs:range xsd:string ; skos:prefLabel "penalty text" .
+bk:threshold a owl:DatatypeProperty ; rdfs:range xsd:string ; skos:prefLabel "threshold" ;
+    skos:definition "Human-readable numeric condition of a rule, e.g. '3 seconds', '24 seconds', '22 ft'." .
+bk:illustrative a owl:DatatypeProperty ; rdfs:range xsd:boolean ;
+    skos:prefLabel "illustrative" ;
+    skos:definition "True when the node is an editorial example rather than a canonical vocabulary entry." .
+bk:confidence a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    skos:prefLabel "confidence" .
+bk:source a owl:DatatypeProperty ; rdfs:range xsd:string ; skos:prefLabel "source" .
+bk:parallelWith a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    skos:prefLabel "parallel with" ;
+    skos:definition "Identifier of another step that happens on the same beat rather than after it." .
+bk:participants a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    skos:prefLabel "participants" .
+bk:branch a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    skos:prefLabel "branch" ;
+    skos:definition "The decision branch this step belongs to." .
+bk:effectiveness a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    skos:prefLabel "effectiveness" .
+bk:exemplar a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    skos:prefLabel "exemplar" ;
+    skos:definition "Editorial example of a player who embodies the archetype." .
+bk:domain a owl:DatatypeProperty ; rdfs:range xsd:string ;
+    skos:prefLabel "domain" ;
+    skos:definition "For action types: offense, defense or both." .
+bk:formationNote a owl:DatatypeProperty ; rdfs:range xsd:string ; skos:prefLabel "formation note" .
+bk:side a owl:DatatypeProperty ; rdfs:range xsd:string ; skos:prefLabel "side" .
+bk:shotClockBudgetSeconds a owl:DatatypeProperty ; rdfs:range xsd:decimal ;
+    skos:prefLabel "shot clock budget (s)" .
+bk:shirtNumber a owl:DatatypeProperty ; rdfs:range xsd:integer ; skos:prefLabel "shirt number" .

@@ -32,6 +32,16 @@ jobs:
       - name: Run the test suite
         run: python -m unittest discover -s tests -v
 
+      # Guards against the failure this repo actually hit once: ontology/basketball.ttl
+      # was matched by the "generated artefact" *.ttl ignore rule, so it never reached
+      # git and every fresh checkout blew up in build_rdf(). A clean clone is the only
+      # way to notice a source file that exists locally but was never committed.
+      - name: Tests pass from a clean checkout
+        run: |
+          git clone . /tmp/clean-checkout
+          cd /tmp/clean-checkout
+          python -m unittest discover -s tests
+
       - name: Generated artefacts are up to date
         run: |
           python scripts/gen_queries.py --check
