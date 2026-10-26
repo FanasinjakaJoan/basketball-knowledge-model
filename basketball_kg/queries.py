@@ -15,6 +15,7 @@ import re
 from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence
 
+from .i18n import Translator
 from .model import KnowledgeGraph, Node
 
 __all__ = ["QueryPlan", "QueryResult", "INTENTS", "intent_help", "run_intent"]
@@ -96,11 +97,11 @@ class QueryPlan:
     evidence: List[str] = field(default_factory=list)
 
     # -- execution --------------------------------------------------------- #
-    def execute(self, kg: KnowledgeGraph) -> QueryResult:
+    def execute(self, kg: KnowledgeGraph, lang: str = "en") -> QueryResult:
         handler = _EXECUTORS.get(self.intent)
         if handler is None:
             raise ValueError(f"unknown intent: {self.intent}")
-        rows, summary = handler(kg, self.slots)
+        rows, summary = handler(kg, self.slots, Translator(lang))
         return QueryResult(intent=self.intent, rows=rows, summary=summary, plan=self)
 
     # -- renderings -------------------------------------------------------- #
@@ -201,18 +202,19 @@ INTENTS: Dict[str, Dict[str, Any]] = {
 }
 
 
-def intent_help() -> str:
-    lines = ["Basketball knowledge query intents", "=" * 62]
+def intent_help(lang: str = "en") -> str:
+    t = Translator(lang)
+    lines = [t("help.title"), "=" * 62]
     for name, meta in INTENTS.items():
         lines.append(f"\n{name}  ({', '.join(meta['slots'])})")
-        lines.append(f"  {meta['purpose']}")
-        lines.append(f"  e.g. {meta['examples'][0]}")
+        lines.append(f"  {t.purpose(name)}")
+        lines.append(f"  {t('help.eg')} {meta['examples'][0]}")
     return "\n".join(lines)
 
 
-def run_intent(kg: KnowledgeGraph, intent: str, **slots: Any) -> QueryResult:
+def run_intent(kg: KnowledgeGraph, intent: str, lang: str = "en", **slots: Any) -> QueryResult:
     """Build a plan for ``intent``/``slots`` and execute it against ``kg``."""
-    return QueryPlan(intent=intent, slots={k: v for k, v in slots.items() if v}).execute(kg)
+    return QueryPlan(intent=intent, slots={k: v for k, v in slots.items() if v}).execute(kg, lang=lang)
 
 
 # --------------------------------------------------------------------------- #
@@ -220,11 +222,12 @@ def run_intent(kg: KnowledgeGraph, intent: str, **slots: Any) -> QueryResult:
 # --------------------------------------------------------------------------- #
 
 
-def _describe(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _describe(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     target = slots.get("target")
     node = kg.get(target) if target else None
     if node is None:
-        return [], "No node matched."
+        return [], t("summary.describe.none")
     rows = [
         {
             "id": node.id,
@@ -234,19 +237,20 @@ def _describe(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
         }
     ]
     for key in node.keys():
-        rows.append({"id": node.id, "type": "key", "label": "coaching key", "definition": key})
+        rows.append({"id": node.id, "type": "key", "label": t("summary.describe.key"), "definition": key})
     if node.type in {"Play", "OffensivePlay", "DefensivePlay"}:
         steps = sorted(node.out("hasStep"), key=lambda s: _order_key(kg, s))
-        rows.append({"id": node.id, "type": "steps", "label": f"{len(steps)} steps", "definition": ", ".join(labels_of(kg, steps))})
-    summary = f"{node.name} [{node.type}] — {node.definition}"
+        rows.append({"id": node.id, "type": "steps", "label": t("summary.describe.steps", n=len(steps)), "definition": ", ".join(labels_of(kg, steps))})
+    summary = t("summary.describe", name=node.name, type=node.type, definition=node.definition)
     return rows, summary
 
 
-def _play_steps(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _play_steps(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     play_id = slots.get("play")
     play = kg.get(play_id) if play_id else None
     if play is None:
-        return [], "No play matched."
+        return [], t("summary.play_steps.none")
     # `stepOf` is inverted into `hasStep`, so decisions also arrive here: split them out
     steps = sorted(
         (s for s in play.out("hasStep") if kg.get(s) and kg[s].type != "Decision"),
@@ -294,7 +298,7 @@ def _play_steps(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
             }
         )
     rows.sort(key=lambda r: (float(r["order"]) if r["order"] not in (None, "") else 9999, r["step"]))
-    summary = f"{play.name}: {len(steps)} steps, {len(decisions)} decision point(s). Formation: {label_of(kg, play.out('hasFormation')[0]) if play.out('hasFormation') else 'n/a'}"
+    summary = t("summary.play_steps", name=play.name, steps=len(steps), decisions=len(decisions), formation=label_of(kg, play.out('hasFormation')[0]) if play.out('hasFormation') else 'n/a')
     return rows, summary
 
 
@@ -306,7 +310,8 @@ def _assignments_of(kg: KnowledgeGraph, scheme_id: str) -> List[str]:
     return found
 
 
-def _zone_responsibility(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _zone_responsibility(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     zone_id = slots.get("zone")
     scheme_id = slots.get("scheme")
     assignments: List[str] = []
@@ -337,17 +342,18 @@ def _zone_responsibility(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
             }
         )
     if zone_id:
-        summary = f"{label_of(kg, zone_id)} is covered by {len(rows)} assignment(s)" + (f" in {', '.join(sorted({r['ofScheme'] for r in rows}))}" if rows else "")
+        summary = t("summary.zone_responsibility.zone", name=label_of(kg, zone_id), n=len(rows)) + (t("summary.zone_responsibility.in", schemes=', '.join(sorted({r['ofScheme'] for r in rows}))) if rows else "")
     else:
-        summary = f"{label_of(kg, scheme_id)}: {len(rows)} area assignments"
+        summary = t("summary.zone_responsibility.scheme", name=label_of(kg, scheme_id), n=len(rows))
     return rows, summary
 
 
-def _counters(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _counters(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     target_id = slots.get("target")
     target = kg.get(target_id) if target_id else None
     if target is None:
-        return [], "No target matched."
+        return [], t("summary.counters.none")
     counter_ids = set(target.out("hasCounter"))
     counter_ids |= {c for c in kg.in_(target_id, "answers") if kg.get(c) and kg[c].type == "Counter"}
     counter_ids |= {c for c in kg.in_(target_id, "exploits") if kg.get(c) and kg[c].type == "Counter"}
@@ -369,15 +375,16 @@ def _counters(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
                 "key": " | ".join(node.keys()),
             }
         )
-    summary = f"{len(rows)} tactical answer(s) to {target.name}"
+    summary = t("summary.counters", n=len(rows), target=target.name)
     return rows, summary
 
 
-def _rules(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _rules(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     target_id = slots.get("target")
     target = kg.get(target_id) if target_id else None
     if target is None:
-        return [], "No target matched."
+        return [], t("summary.rules.none")
     rule_ids = set(target.out("constrainedBy"))
     rule_ids |= set(kg.in_(target_id, "governs"))
     if target.type == "Rule":
@@ -407,15 +414,16 @@ def _rules(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
                 "key": " | ".join(node.keys()),
             }
         )
-    summary = f"{len(rows)} rule(s) constrain {target.name}"
+    summary = t("summary.rules", n=len(rows), target=target.name)
     return rows, summary
 
 
-def _requirements(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _requirements(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     target_id = slots.get("target")
     target = kg.get(target_id) if target_id else None
     if target is None:
-        return [], "No target matched."
+        return [], t("summary.requirements.none")
     req_ids = set(target.out("requires"))
     if target.type in {"Play", "OffensivePlay", "DefensivePlay"}:
         for step_id in target.out("hasStep"):
@@ -441,16 +449,17 @@ def _requirements(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
                 "requires": ", ".join(labels_of(kg, node.out("requires"))),
             }
         )
-    summary = f"{target.name} requires {len(rows)} archetype(s)/skill(s)"
+    summary = t("summary.requirements", target=target.name, n=len(rows))
     return rows, summary
 
 
-def _fit(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _fit(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     scheme_id = slots.get("scheme")
     team_id = slots.get("team")
     scheme = kg.get(scheme_id) if scheme_id else None
     if scheme is None:
-        return [], "No scheme matched."
+        return [], t("summary.fit.none")
     needed = set(scheme.out("requires"))
     if not needed:
         return [], f"{scheme.name} declares no archetype requirements."
@@ -479,15 +488,16 @@ def _fit(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
             }
         )
     rows.sort(key=lambda r: (-r["matchCount"], r["label"]))
-    summary = f"{scheme.name} needs: {', '.join(sorted(labels_of(kg, needed)))}"
+    summary = t("summary.fit", name=scheme.name, items=', '.join(sorted(labels_of(kg, needed))))
     return rows, summary
 
 
-def _situations(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _situations(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     sit_id = slots.get("situation")
     sit = kg.get(sit_id) if sit_id else None
     if sit is None:
-        return [], "No situation matched."
+        return [], t("summary.situations.none")
     hits = [n for n in kg.in_(sit_id, "appliesIn") if kg.get(n)]
     rows = []
     for node_id in sorted(hits, key=lambda i: (kg[i].type, kg[i].name)):
@@ -502,11 +512,12 @@ def _situations(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
                 "definition": node.definition,
             }
         )
-    summary = f"{len(rows)} scheme(s)/play(s) apply in {sit.name}"
+    summary = t("summary.situations", n=len(rows), sit=sit.name)
     return rows, summary
 
 
-def _spatial(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _spatial(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     zone_id = slots.get("zone")
     zone = kg.get(zone_id) if zone_id else None
     if zone is None:
@@ -523,7 +534,7 @@ def _spatial(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
                     "zoneType": ", ".join(labels_of(kg, node.out("hasZoneType"))),
                 }
             )
-        return rows, "All scorable zones, highest shot value first."
+        return rows, t("summary.spatial.all")
     neighbours = sorted(zone.out("adjacentTo"), key=lambda z: _order_key(kg, z))
     rows = [
         {
@@ -553,15 +564,16 @@ def _spatial(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
                 "definition": node.definition,
             }
         )
-    summary = f"{zone.name}: shot value {zone.props.get('shotValue', '?')}, {len(neighbours)} adjacent zone(s)"
+    summary = t("summary.spatial.zone", name=zone.name, value=zone.props.get('shotValue', '?'), n=len(neighbours))
     return rows, summary
 
 
-def _sequence(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _sequence(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     action_id = slots.get("action")
     action = kg.get(action_id) if action_id else None
     if action is None:
-        return [], "No step matched."
+        return [], t("summary.sequence.none")
     nxt = sorted(action.out("precedes"), key=lambda s: _order_key(kg, s))
     prev = sorted(kg.in_(action_id, "precedes"), key=lambda s: _order_key(kg, s))
     rows = []
@@ -570,17 +582,18 @@ def _sequence(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
     rows.append({"relation": "this", "step": action.id, "label": action.name, "actionType": ", ".join(labels_of(kg, action.out("hasActionType"))), "branch": action.props.get("branch", "")})
     for n in nxt:
         rows.append({"relation": "after", "step": n, "label": label_of(kg, n), "actionType": ", ".join(labels_of(kg, kg[n].out("hasActionType"))) if kg.get(n) else "", "branch": kg[n].props.get("branch", "") if kg.get(n) else ""})
-    summary = f"{action.name}: {len(prev)} predecessor(s), {len(nxt)} successor(s)"
+    summary = t("summary.sequence", name=action.name, prev=len(prev), next=len(nxt))
     return rows, summary
 
 
-def _compare(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _compare(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     a = kg.get(slots.get("a")) if slots.get("a") else None
     b = kg.get(slots.get("b")) if slots.get("b") else None
     rows = []
     for role, node in (("a", a), ("b", b)):
         if node is None:
-            rows.append({"side": role, "id": "", "label": "(not found)"})
+            rows.append({"side": role, "id": "", "label": t("summary.compare.none")})
             continue
         rows.append(
             {
@@ -595,18 +608,19 @@ def _compare(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
                 "vulnerableTo": ", ".join(labels_of(kg, node.out("vulnerableTo"))),
             }
         )
-    summary = f"{a.name if a else '?'} vs {b.name if b else '?'}"
+    summary = t("summary.compare", a=a.name if a else '?', b=b.name if b else '?')
     return rows, summary
 
 
-def _search(kg: KnowledgeGraph, slots: Dict[str, Any]) -> tuple:
+def _search(kg: KnowledgeGraph, slots: Dict[str, Any], t: Translator = None) -> tuple:
+    t = t or Translator()
     text = str(slots.get("text", ""))
     results = kg.search(text)
     rows = [
         {"id": node.id, "type": node.type, "label": node.name, "score": score, "definition": node.definition}
         for node, score in results[:25]
     ]
-    return rows, f"{len(rows)} match(es) for {text!r}"
+    return rows, t("summary.search", n=len(rows), text=repr(text))
 
 
 _EXECUTORS = {

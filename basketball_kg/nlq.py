@@ -414,7 +414,7 @@ def parse(kg: KnowledgeGraph, question: str, index: Optional[VocabularyIndex] = 
     )
 
 
-def answer(kg: KnowledgeGraph, question: str, index: Optional[VocabularyIndex] = None) -> QueryResult:
-    """Parse and execute a question in one call."""
+def answer(kg: KnowledgeGraph, question: str, index: Optional[VocabularyIndex] = None, lang: str = "en") -> QueryResult:
+    """Parse and execute a question in one call (``lang`` localises the summary)."""
     plan = parse(kg, question, index=index)
-    return plan.execute(kg)
+    return plan.execute(kg, lang=lang)
